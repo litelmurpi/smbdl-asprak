@@ -545,11 +545,238 @@
       color: #FECDD3;
     }
 
-    /* ---------------- RESPONSIVE SCALE ---------------- */
-    @media (max-width: 1280px) {
+    /* Mobile bottom dock default (hidden on desktop) */
+    .mobile-nav-dock {
+      display: none;
+    }
+
+    /* ---------------- RESPONSIVE BREAKPOINTS ---------------- */
+    @media (max-width: 1200px) {
       :root {
         --slide-width: 95vw;
-        --slide-height: 53.43vw;
+        --slide-height: 54vw;
+      }
+      .slide {
+        padding: 22px 32px 16px 32px;
+      }
+      .slide-title {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      :root {
+        --slide-width: 96vw;
+        --slide-height: 84vh;
+      }
+      main.deck-stage {
+        padding: 12px;
+      }
+      .slide-frame {
+        height: 84vh;
+      }
+      .slide {
+        padding: 20px 24px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .card-grid-4, .card-grid-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+      }
+      .overview-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
+      }
+
+      header.deck-header {
+        height: 48px;
+        padding: 0 12px;
+      }
+      .brand-title {
+        display: none !important;
+      }
+      .brand-tag {
+        font-size: 10.5px;
+        padding: 3px 8px;
+      }
+      .deck-controls .ctrl-btn:not(#btnOverview) {
+        display: none !important;
+      }
+      .deck-controls #btnOverview {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-height: 38px;
+      }
+      .slide-counter {
+        display: none !important;
+      }
+
+      main.deck-stage {
+        padding: 8px 10px calc(62px + env(safe-area-inset-bottom, 8px)) 10px;
+        align-items: stretch;
+        height: calc(100dvh - 48px);
+        overflow: hidden;
+      }
+
+      .slide-frame {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 14px;
+        transform: none !important;
+      }
+
+      .slide {
+        padding: 16px 14px 24px 14px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain;
+      }
+
+      .slide::-webkit-scrollbar {
+        width: 4px;
+      }
+      .slide::-webkit-scrollbar-thumb {
+        background: rgba(0, 229, 255, 0.28);
+        border-radius: 4px;
+      }
+
+      .slide-title {
+        font-size: 19px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 6px !important;
+      }
+      .slide-description {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        margin-bottom: 12px !important;
+      }
+      .slide-footer-row {
+        font-size: 10px !important;
+        padding-top: 12px !important;
+        margin-top: 16px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+      }
+
+      .card-grid-2,
+      .card-grid-3,
+      .card-grid-4 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        flex: none !important;
+        width: 100% !important;
+      }
+
+      .tech-card {
+        padding: 13px 14px !important;
+        min-height: auto !important;
+        flex: none !important;
+      }
+
+      .table-sunken-frame {
+        overflow-x: auto !important;
+        display: block !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+      }
+      .slide-table {
+        min-width: 500px !important;
+        font-size: 11.5px !important;
+      }
+
+      .overview-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      .overview-thumb {
+        height: auto !important;
+        min-height: 80px !important;
+        padding: 8px 10px !important;
+      }
+
+      .mobile-nav-dock {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: calc(56px + env(safe-area-inset-bottom, 8px));
+        padding: 7px 14px calc(7px + env(safe-area-inset-bottom, 8px)) 14px;
+        background: rgba(8, 12, 24, 0.88);
+        backdrop-filter: blur(28px);
+        -webkit-backdrop-filter: blur(28px);
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
+        z-index: 99;
+      }
+
+      .mobile-nav-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #FFFFFF;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 0 16px;
+        height: 42px;
+        border-radius: 9px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 84px;
+        touch-action: manipulation;
+      }
+
+      .mobile-nav-btn:active {
+        background: rgba(0, 229, 255, 0.22);
+        color: var(--accent-cyan);
+      }
+
+      .mobile-nav-center {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .mobile-counter-txt {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: #CBD5E1;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 12px;
+        border-radius: 8px;
+      }
+
+      .mobile-overview-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #E2E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        touch-action: manipulation;
       }
     }
   </style>
@@ -1255,6 +1482,22 @@ SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;</div>
     </div>
   </main>
 
+  <!-- MOBILE BOTTOM DOCK (Controls for thumb reachability on mobile screens) -->
+  <nav class="mobile-nav-dock" id="mobileNavDock" aria-label="Navigasi Slide Mobile">
+    <button class="mobile-nav-btn" id="btnMobilePrev" title="Slide Sebelumnya">
+      ◀ Prev
+    </button>
+    <div class="mobile-nav-center">
+      <span class="mobile-counter-txt" id="mobileCounterTxt">01 / 12</span>
+      <button class="mobile-overview-btn" id="btnMobileOverview" title="Daftar Slide (Esc)">
+        ☵
+      </button>
+    </div>
+    <button class="mobile-nav-btn" id="btnMobileNext" title="Slide Berikutnya">
+      Next ▶
+    </button>
+  </nav>
+
   <!-- OVERVIEW / GRID MODAL (ESC) -->
   <div class="overview-modal" id="overviewModal">
     <div class="overview-header">
@@ -1289,14 +1532,27 @@ SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;</div>
 
     // Touch Swipe Support
     let touchStartX = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
     let touchEndX = 0;
+    let touchEndY = 0;
     window.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
+      if (e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
     }, { passive: true });
     window.addEventListener('touchend', e => {
-      touchEndX = e.changedTouches[0].screenX;
-      if (touchEndX < touchStartX - 60) nextSlide();
-      if (touchEndX > touchStartX + 60) prevSlide();
+      if (e.changedTouches.length > 0) {
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35) {
+          if (deltaX < 0) nextSlide();
+          else prevSlide();
+        }
+      }
     }, { passive: true });
 
     // Update Slide View
@@ -1308,6 +1564,7 @@ SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;</div>
         s.classList.remove('active', 'prev');
         if (idx + 1 === n) {
           s.classList.add('active');
+          s.scrollTop = 0;
         } else if (idx + 1 < n) {
           s.classList.add('prev');
         }
@@ -1315,6 +1572,10 @@ SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;</div>
 
       currentSlide = n;
       slideIndicator.textContent = `${String(n).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      const mobileCounter = document.getElementById('mobileCounterTxt');
+      if (mobileCounter) {
+        mobileCounter.textContent = `${String(n).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      }
       progressBar.style.width = `${(n / totalSlides) * 100}%`;
       updateOverviewSelection();
       try {
@@ -1333,6 +1594,13 @@ SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;</div>
     // Navigation buttons
     document.getElementById('btnNext').addEventListener('click', nextSlide);
     document.getElementById('btnPrev').addEventListener('click', prevSlide);
+
+    const btnMobilePrev = document.getElementById('btnMobilePrev');
+    const btnMobileNext = document.getElementById('btnMobileNext');
+    const btnMobileOverview = document.getElementById('btnMobileOverview');
+    if (btnMobilePrev) btnMobilePrev.addEventListener('click', prevSlide);
+    if (btnMobileNext) btnMobileNext.addEventListener('click', nextSlide);
+    if (btnMobileOverview) btnMobileOverview.addEventListener('click', toggleOverview);
 
     // Keyboard events
     window.addEventListener('keydown', (e) => {

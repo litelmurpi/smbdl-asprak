@@ -942,8 +942,453 @@
       color: var(--text-muted);
     }
 
-    @media (max-width: 1280px) {
-      :root { --slide-width: 95vw; --slide-height: 53.43vw; }
+    /* Mobile bottom dock default (hidden on desktop) */
+    .mobile-nav-dock {
+      display: none;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE DESIGN BREAKPOINTS (Mobile, Tablet, Desktop)
+       Adhering strictly to antislop-layoutmobile principles:
+       1. Reflow into a distinct mobile state (not shrunk desktop).
+       2. Multi-column grids collapse and re-stack.
+       3. Thumb-friendly navigation dock with >= 44x44px touch targets.
+       4. Slide contents freely scroll vertically inside glass chassis on mobile.
+       5. Zero horizontal scroll leakage, smooth touch gesture navigation.
+       ========================================================================== */
+
+    /* LAPTOP / SMALL DESKTOP (<= 1200px) */
+    @media (max-width: 1200px) {
+      :root {
+        --slide-width: 95vw;
+        --slide-height: 54vw;
+      }
+      .slide {
+        padding: 22px 32px 16px 32px;
+      }
+      .slide-title {
+        font-size: 24px;
+      }
+    }
+
+    /* TABLET LANDSCAPE / PORTRAIT (<= 1024px) */
+    @media (max-width: 1024px) {
+      :root {
+        --slide-width: 96vw;
+        --slide-height: 84vh;
+      }
+      main.deck-stage {
+        padding: 12px;
+      }
+      .slide-frame {
+        height: 84vh;
+      }
+      .slide {
+        padding: 20px 24px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .card-grid-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+      }
+      .card-grid-3 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px;
+      }
+      .overview-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* MOBILE PHONES & TABLETS (<= 768px) */
+    @media (max-width: 768px) {
+      body {
+        height: 100dvh;
+        min-height: 100dvh;
+        overflow: hidden;
+        perspective: none;
+      }
+
+      /* Compact frosted top bar */
+      header.deck-header {
+        height: 48px;
+        padding: 0 12px;
+      }
+      .brand-title {
+        display: none !important;
+      }
+      .brand-tag {
+        font-size: 10.5px;
+        padding: 3px 8px;
+        gap: 6px;
+      }
+      .deck-controls {
+        gap: 6px;
+      }
+      .deck-controls .ctrl-btn:not(#btnOverview) {
+        display: none !important;
+      }
+      .deck-controls #btnOverview {
+        padding: 6px 10px;
+        font-size: 11px;
+        min-height: 38px;
+      }
+      .slide-counter {
+        display: none !important;
+      }
+
+      /* Deck stage & frame: responsive full-height mobile container */
+      main.deck-stage {
+        padding: 8px 10px calc(62px + env(safe-area-inset-bottom, 8px)) 10px;
+        align-items: stretch;
+        height: calc(100dvh - 48px);
+        overflow: hidden;
+      }
+
+      .slide-frame {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 14px;
+        transform: none !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      }
+
+      .slide {
+        padding: 16px 14px 24px 14px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        overscroll-behavior-y: contain;
+        transform: translate3d(24px, 0, 0) scale(0.98);
+      }
+
+      .slide.active {
+        transform: translate3d(0, 0, 0) scale(1) !important;
+      }
+
+      .slide.prev {
+        transform: translate3d(-24px, 0, 0) scale(0.98) !important;
+      }
+
+      /* Scrollbar styling for slide container */
+      .slide::-webkit-scrollbar {
+        width: 4px;
+      }
+      .slide::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .slide::-webkit-scrollbar-thumb {
+        background: rgba(0, 229, 255, 0.28);
+        border-radius: 4px;
+      }
+
+      /* Typography reflow */
+      .slide-title {
+        font-size: 19px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 6px !important;
+      }
+      .hero-title {
+        font-size: 22px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 12px !important;
+      }
+      .hero-desc {
+        font-size: 13px !important;
+        line-height: 1.55 !important;
+        margin-bottom: 18px !important;
+      }
+      .hero-badges-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-bottom: 20px !important;
+      }
+      .tactile-meta-badge {
+        width: 100% !important;
+        padding: 10px 14px !important;
+      }
+
+      .slide-description {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+        margin-bottom: 12px !important;
+      }
+      .slide-label-row {
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .slide-category {
+        font-size: 10px !important;
+        padding: 2px 7px !important;
+      }
+      .slide-submeta {
+        font-size: 10px !important;
+      }
+      .slide-footer-row {
+        font-size: 10px !important;
+        padding-top: 12px !important;
+        margin-top: 16px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
+
+      /* Grids stack cleanly into single-column cards */
+      .card-grid-2,
+      .card-grid-3,
+      .card-grid-4 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+        flex: none !important;
+        width: 100% !important;
+      }
+
+      .tech-card {
+        padding: 13px 14px !important;
+        min-height: auto !important;
+        flex: none !important;
+      }
+      .tech-card-header {
+        margin-bottom: 8px !important;
+      }
+      .tech-card-title {
+        font-size: 14px !important;
+      }
+      .tech-card-p {
+        font-size: 12px !important;
+        line-height: 1.5 !important;
+      }
+
+      /* Code boxes */
+      .code-box {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-bottom: 10px;
+      }
+      .code-box-header {
+        padding: 8px 12px !important;
+        font-size: 11px !important;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .code-content,
+      .sql-content,
+      pre {
+        font-size: 11px !important;
+        padding: 10px 12px !important;
+        line-height: 1.48 !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      /* Tables horizontal scroll container */
+      .table-sunken-frame {
+        overflow-x: auto !important;
+        display: block !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+        border-radius: 10px !important;
+      }
+      .slide-table {
+        min-width: 520px !important;
+        font-size: 11.5px !important;
+      }
+      .slide-table th,
+      .slide-table td {
+        padding: 7px 10px !important;
+      }
+
+      /* Tabs scrollable chiclet track */
+      .tab-bar {
+        max-width: 100% !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 4px !important;
+        margin-bottom: 10px !important;
+        gap: 5px !important;
+      }
+      .tab-btn {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        padding: 7px 12px !important;
+        font-size: 11px !important;
+        min-height: 36px;
+      }
+
+      /* Download / Action Buttons */
+      .download-actions-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+      .download-actions-row .ctrl-btn {
+        width: 100% !important;
+        min-height: 42px !important;
+        justify-content: center !important;
+      }
+
+      /* Hints */
+      .desktop-hint { display: none !important; }
+      .mobile-hint { display: flex !important; }
+
+      /* Slide 13 Auth Gate on Mobile */
+      .auth-gate-box {
+        padding: 16px 10px !important;
+      }
+      .auth-card {
+        padding: 20px 16px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .auth-input-group {
+        flex-direction: column !important;
+        gap: 10px !important;
+        width: 100% !important;
+      }
+      .auth-input {
+        width: 100% !important;
+        height: 44px !important;
+        font-size: 13.5px !important;
+      }
+      #btnUnlockSolutions {
+        width: 100% !important;
+        height: 44px !important;
+        justify-content: center !important;
+      }
+
+      /* Overview Modal on Mobile */
+      .overview-modal {
+        padding: 14px 12px !important;
+      }
+      .overview-header {
+        margin-bottom: 12px !important;
+      }
+      .overview-title {
+        font-size: 13.5px !important;
+      }
+      .overview-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+      .overview-thumb {
+        height: auto !important;
+        min-height: 80px !important;
+        padding: 8px 10px !important;
+      }
+      .thumb-title {
+        font-size: 11px !important;
+      }
+      .thumb-cat {
+        font-size: 9px !important;
+      }
+
+      /* Mobile Navigation Dock */
+      .mobile-nav-dock {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: calc(56px + env(safe-area-inset-bottom, 8px));
+        padding: 7px 14px calc(7px + env(safe-area-inset-bottom, 8px)) 14px;
+        background: rgba(8, 12, 24, 0.88);
+        backdrop-filter: blur(28px) saturate(190%);
+        -webkit-backdrop-filter: blur(28px) saturate(190%);
+        border-top: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
+        z-index: 99;
+      }
+
+      .mobile-nav-btn {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #FFFFFF;
+        font-family: var(--font-body);
+        font-size: 13px;
+        font-weight: 700;
+        padding: 0 16px;
+        height: 42px;
+        border-radius: 9px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-width: 84px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        transition: all 0.15s ease;
+        touch-action: manipulation;
+      }
+
+      .mobile-nav-btn:active {
+        background: rgba(0, 229, 255, 0.22);
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+        transform: scale(0.96);
+      }
+
+      .mobile-nav-center {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .mobile-counter-txt {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        font-weight: 700;
+        color: #CBD5E1;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 6px 12px;
+        border-radius: 8px;
+        letter-spacing: 0.06em;
+      }
+
+      .mobile-overview-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #E2E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+
+      .mobile-overview-btn:active {
+        background: rgba(0, 229, 255, 0.22);
+        color: var(--accent-cyan);
+        border-color: var(--accent-cyan);
+      }
+    }
+
+    /* SMALL PHONES (<= 400px) */
+    @media (max-width: 400px) {
+      .mobile-nav-btn {
+        padding: 0 10px;
+        min-width: 72px;
+        font-size: 12px;
+      }
+      .mobile-counter-txt {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+      .overview-grid {
+        grid-template-columns: 1fr !important;
+      }
     }
   
     /* --- REACTBITS GRAINIENT BACKGROUND --- */
@@ -1008,14 +1453,14 @@
           </div>
 
           <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 900px;">
-            <h1 style="font-family: var(--font-display); font-size: 38px; font-weight: 800; color: #FFF; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 16px;">
+            <h1 class="hero-title" style="font-family: var(--font-display); font-size: 38px; font-weight: 800; color: #FFF; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 16px;">
               Pemrograman Prosedural Database: <span style="color: var(--accent-cyan);">Stored Procedure, UDF &amp; Cursor</span>
             </h1>
-            <p style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin-bottom: 26px;">
+            <p class="hero-desc" style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin-bottom: 26px;">
               Penyusunan logika bisnis terpusat di sisi server (RDBMS): User Defined Function (UDF), Stored Procedure dengan parameter IN/OUT/INOUT, iterasi baris per baris dengan CURSOR, dan penanganan galat terstruktur (SIGNAL SQLSTATE &amp; HANDLER) pada kasus ritel minimarket 3NF.
             </p>
 
-            <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+            <div class="hero-badges-row" style="display: flex; gap: 12px; margin-bottom: 32px;">
               <div class="tactile-meta-badge">
                 <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Materi Praktikum</div>
                 <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">Pengayaan Praktikum 4</div>
@@ -1030,8 +1475,11 @@
               </div>
             </div>
 
-            <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+            <div class="desktop-hint" style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
               Tekan <kbd>Space</kbd> atau <kbd>→</kbd> untuk navigasi · <kbd>Esc</kbd> untuk galeri
+            </div>
+            <div class="mobile-hint" style="font-family: var(--font-mono); font-size: 11.5px; color: var(--accent-cyan); display: none; align-items: center; gap: 6px;">
+              <i class="ph-bold ph-hand-swipe-left"></i> Geser layar (swipe) atau gunakan tombol di bawah
             </div>
           </div>
 
@@ -1509,7 +1957,7 @@ bacaLoop: <span class="kw">LOOP</span>
                   Skrip SQL ini memuat pembuatan database, skema 5 tabel fisik (KASIR, CUSTOMER, PRODUK, NOTA, ITEMNOTA) dengan batasan integritas penuh (CHECK, FK CASCADE), serta 16 baris data transaksi awal.
                 </p>
 
-                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                <div class="download-actions-row" style="display: flex; gap: 10px; margin-bottom: 12px;">
                   <button class="ctrl-btn" style="flex: 1.15; background: linear-gradient(135deg, rgba(0, 229, 255, 0.25) 0%, rgba(37, 99, 235, 0.40) 100%); border-color: rgba(0, 229, 255, 0.55); color: #FFF; font-weight: 700; padding: 10px 14px; justify-content: center; font-size: 12.5px; box-shadow: 0 4px 14px rgba(0, 229, 255, 0.22);" onclick="downloadSqlFile()">
                     <i class="ph-bold ph-download-simple" style="font-size: 15px;"></i> Unduh minimarket_db.sql
                   </button>
@@ -1820,6 +2268,24 @@ SELECT kodeproduk, namaproduk, stok, fcCekStatusStok(kodeproduk) AS status_stok 
       </div>
     </div>
   </main>
+
+  <!-- MOBILE BOTTOM DOCK (Controls for thumb reachability on mobile screens) -->
+  <nav class="mobile-nav-dock" id="mobileNavDock" aria-label="Navigasi Slide Mobile">
+    <button class="mobile-nav-btn" id="btnMobilePrev" title="Slide Sebelumnya">
+      <i class="ph-bold ph-caret-left"></i>
+      <span>Prev</span>
+    </button>
+    <div class="mobile-nav-center">
+      <span class="mobile-counter-txt" id="mobileCounterTxt">01 / 13</span>
+      <button class="mobile-overview-btn" id="btnMobileOverview" title="Daftar Slide (Esc)">
+        <i class="ph-bold ph-grid-four"></i>
+      </button>
+    </div>
+    <button class="mobile-nav-btn" id="btnMobileNext" title="Slide Berikutnya">
+      <span>Next</span>
+      <i class="ph-bold ph-caret-right"></i>
+    </button>
+  </nav>
 
   <!-- OVERVIEW / GRID MODAL (ESC) -->
   <div class="overview-modal" id="overviewModal">
@@ -2474,12 +2940,29 @@ let currentSlide = 1;
     }
 
     let touchStartX = 0;
+    let touchStartY = 0;
     let touchEndX = 0;
-    window.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    let touchEndY = 0;
+
+    window.addEventListener('touchstart', e => {
+      if (e.touches.length > 0) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
     window.addEventListener('touchend', e => {
-      touchEndX = e.changedTouches[0].screenX;
-      if (touchEndX < touchStartX - 60) nextSlide();
-      if (touchEndX > touchStartX + 60) prevSlide();
+      if (e.changedTouches.length > 0) {
+        touchEndX = e.changedTouches[0].clientX;
+        touchEndY = e.changedTouches[0].clientY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        // Require horizontal swipe >= 50px and predominantly horizontal vs vertical displacement
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.35) {
+          if (deltaX < 0) nextSlide();
+          else prevSlide();
+        }
+      }
     }, { passive: true });
 
     function goToSlide(n) {
@@ -2488,12 +2971,19 @@ let currentSlide = 1;
 
       slides.forEach((s, idx) => {
         s.classList.remove('active', 'prev');
-        if (idx + 1 === n) s.classList.add('active');
+        if (idx + 1 === n) {
+          s.classList.add('active');
+          s.scrollTop = 0; // Scroll back to top on slide change
+        }
         else if (idx + 1 < n) s.classList.add('prev');
       });
 
       currentSlide = n;
       slideIndicator.textContent = `${String(n).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      const mobileCounter = document.getElementById('mobileCounterTxt');
+      if (mobileCounter) {
+        mobileCounter.textContent = `${String(n).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      }
       progressBar.style.width = `${(n / totalSlides) * 100}%`;
       updateOverviewSelection();
       if (n === 13 && typeof checkSolutionAuth === 'function') {
@@ -2507,6 +2997,13 @@ let currentSlide = 1;
 
     document.getElementById('btnNext').addEventListener('click', nextSlide);
     document.getElementById('btnPrev').addEventListener('click', prevSlide);
+
+    const btnMobilePrev = document.getElementById('btnMobilePrev');
+    const btnMobileNext = document.getElementById('btnMobileNext');
+    const btnMobileOverview = document.getElementById('btnMobileOverview');
+    if (btnMobilePrev) btnMobilePrev.addEventListener('click', prevSlide);
+    if (btnMobileNext) btnMobileNext.addEventListener('click', nextSlide);
+    if (btnMobileOverview) btnMobileOverview.addEventListener('click', toggleOverview);
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
