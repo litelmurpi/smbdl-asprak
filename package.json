@@ -3,9 +3,8 @@
   "version": "1.0.0",
   "description": "Slide Presentasi Web & Modul Pengayaan Praktikum Sistem Manajemen Basis Data Lanjut (SMBD Lanjut)",
   "scripts": {
-    "dev": "npx serve . -l 3000",
-    "start": "npx serve . -l 3000",
-    "build": "echo 'Static site ready for Vercel deployment'"
+    "dev": "npx serve public -l 3000",
+    "start": "npx serve public -l 3000"
   },
   "keywords": [
     "smbd-lanjut",

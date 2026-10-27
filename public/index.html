@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stored Procedure, UDF, Cursor & Error Handling | SMBD Lanjut</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/bold/style.css">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/fill/style.css">
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/@phosphor-icons/web@2.1.2/src/regular/style.css">
+  <script defer src="https://unpkg.com/@phosphor-icons/web@2.1.2/src/index.js"></script>
+  <style>
+    :root {
+      /* --- REFINED LIQUID GLASS WITH SUBTLE TACTILE ACCENTS --- */
+      --bg-desk: #060912;
+      --bg-chassis: rgba(10, 16, 32, 0.45);
+      --chassis-surface: linear-gradient(175deg, rgba(16, 26, 52, 0.50) 0%, rgba(8, 13, 28, 0.65) 100%);
+      --surface-card: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(14, 24, 48, 0.45) 100%);
+      --surface-card-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(20, 36, 72, 0.55) 100%);
+      --surface-card-highlight: linear-gradient(135deg, rgba(0, 229, 255, 0.12) 0%, rgba(14, 34, 72, 0.55) 100%);
+      --surface-recessed: rgba(6, 10, 22, 0.72);
+      --surface-track: rgba(8, 14, 28, 0.55);
+      
+      /* Optical Lens & Ultra-thin Specular Highlights */
+      --specular-line: rgba(255, 255, 255, 0.25);
+      --specular-subtle: rgba(255, 255, 255, 0.10);
+      --border-glass: rgba(255, 255, 255, 0.16);
+      --border-glass-hover: rgba(255, 255, 255, 0.28);
+      --border-subtle: rgba(255, 255, 255, 0.10);
+      --bg-card: var(--surface-card);
+      
+      /* Soft Atmospheric Shadows (No bulky block shadows) */
+      --shadow-chassis: 
+        0 1px 0 1px rgba(255, 255, 255, 0.20) inset,
+        0 30px 80px rgba(0, 0, 0, 0.75),
+        0 0 70px rgba(0, 91, 255, 0.25);
+        
+      --shadow-card:
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+
+      --shadow-card-lift:
+        inset 0 1px 0 rgba(255, 255, 255, 0.40),
+        0 16px 36px rgba(0, 0, 0, 0.55),
+        0 0 25px rgba(0, 91, 255, 0.30);
+
+      --shadow-recessed:
+        inset 0 2px 8px rgba(0, 0, 0, 0.6),
+        0 1px 0 rgba(255, 255, 255, 0.08);
+
+      --shadow-btn:
+        0 4px 12px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+      --shadow-btn-pressed:
+        0 1px 3px rgba(0, 0, 0, 0.3),
+        inset 0 1px 2px rgba(0, 0, 0, 0.4);
+
+      /* Functional Accent Signals */
+      --accent-cyan: #00E5FF;
+      --accent-cyan-dim: rgba(0, 229, 255, 0.12);
+      --accent-blue: #2563EB;
+      --accent-indigo: #6366F1;
+      --accent-green: #10B981;
+      --accent-red: #F43F5E;
+      --accent-amber: #F59E0B;
+      
+      /* High Contrast Text */
+      --text-heading: #FFFFFF;
+      --text-body: #D1DDF0;
+      --text-muted: #8EA4C2;
+      
+      /* Typography */
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+      
+      --slide-width: 1200px;
+      --slide-height: 680px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: #080B12;
+      background-image: 
+        radial-gradient(circle at 50% 35%, rgba(0, 91, 255, 0.55) 0%, rgba(0, 50, 180, 0.28) 35%, transparent 65%),
+        radial-gradient(circle at 85% 75%, rgba(0, 180, 255, 0.28) 0%, transparent 45%),
+        radial-gradient(circle at 15% 70%, rgba(67, 56, 202, 0.35) 0%, transparent 50%),
+        radial-gradient(circle at 50% -10%, rgba(0, 91, 255, 0.45) 0%, transparent 55%);
+      background-attachment: fixed;
+      color: var(--text-body);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      perspective: 1400px;
+    }
+
+    /* --- ATMOSPHERIC 3D VOLUMETRIC COBALT GLOW --- */
+    .ambient-glow-sphere {
+      position: absolute;
+      width: 950px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(0, 91, 255, 0.55) 0%, rgba(0, 60, 210, 0.30) 35%, rgba(2, 20, 60, 0.08) 60%, transparent 75%);
+      filter: blur(75px);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transform: translate3d(0, -30px, -100px);
+    }
+
+    .ambient-glow-sphere-secondary {
+      position: absolute;
+      width: 750px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(0, 180, 255, 0.28) 0%, rgba(67, 56, 202, 0.20) 40%, transparent 70%);
+      filter: blur(85px);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      transform: translate3d(320px, 140px, -120px);
+    }
+
+    /* TOP DECK HEADER: Sleek Frosted Glass Bar */
+    header.deck-header {
+      height: 56px;
+      background: rgba(8, 12, 24, 0.65);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 100;
+      position: relative;
+    }
+
+    .brand-meta { display: flex; align-items: center; gap: 14px; }
+
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.28);
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.06em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-led {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .brand-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-heading);
+      letter-spacing: -0.01em;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    .deck-controls { display: flex; align-items: center; gap: 10px; }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #94A3B8;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 5px 12px;
+      border-radius: 6px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+      letter-spacing: 0.05em;
+    }
+
+    /* Refined Liquid Glass Push Buttons */
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #E2E8F0;
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: var(--shadow-btn);
+      transition: all 0.15s ease;
+      transform: translateY(0);
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #FFFFFF;
+      border-color: rgba(0, 229, 255, 0.4);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), 0 0 14px rgba(0, 229, 255, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .ctrl-btn:active {
+      transform: scale(0.97);
+      background: rgba(0, 229, 255, 0.15);
+      box-shadow: var(--shadow-btn-pressed);
+      color: var(--accent-cyan);
+    }
+
+    .ctrl-btn:focus-visible {
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 1px;
+    }
+
+    /* Recessed Progress Bar */
+    .progress-bar-container {
+      height: 3px;
+      background: rgba(0, 0, 0, 0.4);
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0284C7 0%, var(--accent-cyan) 100%);
+      width: 8.33%;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+      transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    /* MAIN STAGE */
+    main.deck-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 16px;
+      transform-style: preserve-3d;
+    }
+
+    /* Slide Frame: Sleek Floating Glass Tablet (No Corner Hardware Screws) */
+    .slide-frame {
+      width: var(--slide-width);
+      height: var(--slide-height);
+      position: relative;
+      background: var(--chassis-surface);
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 18px;
+      box-shadow: var(--shadow-chassis);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform-style: preserve-3d;
+      z-index: 1;
+    }
+
+    /* Remove screws */
+    .slide-frame::before, .slide-frame::after {
+      display: none !important;
+    }
+
+    .slides-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      z-index: 2;
+    }
+
+    /* Slide Cards with 3D Spatial Transitions */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 26px 42px 18px 42px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      opacity: 0;
+      visibility: hidden;
+      transform: translate3d(40px, 0, -60px) rotateY(3deg) scale(0.97);
+      transition: 
+        opacity 0.40s cubic-bezier(0.16, 1, 0.3, 1),
+        transform 0.40s cubic-bezier(0.16, 1, 0.3, 1),
+        visibility 0.40s;
+      pointer-events: none;
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translate3d(0, 0, 0) rotateY(0deg) scale(1);
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    .slide.prev {
+      opacity: 0;
+      transform: translate3d(-40px, 0, -60px) rotateY(-3deg) scale(0.97);
+    }
+
+    .slide-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .slide-category {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(0, 229, 255, 0.08);
+      padding: 3px 9px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .slide-submeta {
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+    }
+
+    .slide-title {
+      font-family: var(--font-display);
+      font-size: 25px;
+      font-weight: 800;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 6px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .slide-description {
+      font-size: 13.5px;
+      color: var(--text-body);
+      line-height: 1.5;
+      margin-bottom: 14px;
+      max-width: 960px;
+    }
+
+    .slide-footer-row {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Grids */
+    .card-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+    .card-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+    .card-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* PURE LIQUID GLASS CARDS WITH SUBTLE TACTILE DEPTH */
+    .tech-card {
+      background: var(--surface-card);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--border-glass);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-card);
+      transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 0;
+      transform: none !important;
+    }
+
+    .tech-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 45%);
+      pointer-events: none;
+      border-radius: 14px;
+      z-index: 0;
+    }
+
+    .tech-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Cards remain rock-solid and stable on hover - NO tilting, wobbling, or jumping */
+    .tech-card:hover {
+      background: var(--surface-card-hover);
+      box-shadow: var(--shadow-card-lift);
+      border-color: var(--border-glass-hover);
+      transform: none !important;
+    }
+
+    /* Interactive cards with action buttons: 100% stationary */
+    .action-card,
+    .tech-card:has(button),
+    .tech-card:has(.ctrl-btn),
+    .tech-card:has(input),
+    .code-box {
+      transform: none !important;
+    }
+
+    .action-card:hover,
+    .tech-card:has(button):hover,
+    .tech-card:has(.ctrl-btn):hover,
+    .tech-card:has(input):hover,
+    .code-box:hover {
+      transform: none !important;
+    }
+
+    .tech-card.highlight {
+      border-color: rgba(0, 229, 255, 0.45);
+      background: var(--surface-card-highlight);
+      box-shadow: 
+        inset 0 1px 0 rgba(0, 229, 255, 0.45),
+        0 12px 32px rgba(0, 0, 0, 0.45),
+        0 0 28px rgba(0, 91, 255, 0.35);
+    }
+
+    .tech-card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+
+    .tech-card-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.10);
+      border: 1px solid rgba(0, 229, 255, 0.30);
+      padding: 3px 8px;
+      border-radius: 5px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .tech-card-title {
+      font-family: var(--font-display);
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.01em;
+    }
+
+    .tech-card-p {
+      font-size: 13px;
+      color: var(--text-body);
+      line-height: 1.55;
+    }
+
+    /* SMOKED LIQUID GLASS CODE BOX */
+    .code-box {
+      background: var(--surface-recessed);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      box-shadow: var(--shadow-recessed);
+      transform: none !important;
+    }
+
+    .code-box-header {
+      background: rgba(18, 28, 52, 0.65);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .code-box-header span {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 600;
+      color: #94A3B8;
+    }
+
+    .code-box-header span::before {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #00E5FF;
+      box-shadow: 0 0 6px #00E5FF;
+    }
+
+    .code-copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #CBD5E1;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      transition: all 0.15s ease;
+      transform: translateY(0);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .code-copy-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #FFFFFF;
+      border-color: rgba(0, 229, 255, 0.4);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
+    }
+
+    .code-copy-btn:active {
+      transform: scale(0.96);
+      color: var(--accent-cyan);
+    }
+
+    .code-content {
+      padding: 12px 14px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #93C5FD;
+      line-height: 1.55;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      white-space: pre;
+    }
+
+    .code-content::-webkit-scrollbar, #taskContainer::-webkit-scrollbar, .overview-grid::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .code-content::-webkit-scrollbar-track, #taskContainer::-webkit-scrollbar-track, .overview-grid::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .code-content::-webkit-scrollbar-thumb, #taskContainer::-webkit-scrollbar-thumb, .overview-grid::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 4px;
+    }
+    .code-content::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* SQL Syntax Colors */
+    .kw { color: #38BDF8; font-weight: 600; }
+    .fn { color: #C084FC; font-weight: 500; }
+    .str { color: #34D399; }
+    .cm { color: #64748B; font-style: italic; }
+    .tbl { color: #FCD34D; font-weight: 600; }
+
+    /* Frosted Tables & Sunken Frames */
+    .table-sunken-frame {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(12, 22, 46, 0.45) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      transform: none !important;
+    }
+
+    .slide-table { width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left; }
+    .slide-table th {
+      background: rgba(255, 255, 255, 0.06);
+      color: #FFFFFF;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .slide-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-body);
+    }
+    .slide-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .task-sunken-frame {
+      background: rgba(6, 10, 22, 0.72);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-recessed);
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      transform: none !important;
+    }
+
+    /* AUTHENTICATION GATE FOR SOLUTION PORTAL */
+    .auth-gate-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 0;
+      padding: 10px 20px;
+      animation: fadeInGate 0.3s ease;
+    }
+
+    @keyframes fadeInGate {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 460px;
+      background: rgba(10, 16, 32, 0.75);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(0, 229, 255, 0.30);
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.25),
+        0 20px 50px rgba(0, 0, 0, 0.65),
+        0 0 35px rgba(0, 91, 255, 0.25);
+      transform: none !important;
+      position: relative;
+    }
+
+    .auth-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.08) 0%, transparent 60%);
+      pointer-events: none;
+      border-radius: 16px;
+    }
+
+    .auth-icon-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.22) 0%, rgba(37, 99, 235, 0.28) 70%, transparent 100%);
+      border: 1px solid rgba(0, 229, 255, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.35);
+    }
+
+    .auth-input-group {
+      display: flex;
+      width: 100%;
+      gap: 10px;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    .auth-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #FFFFFF;
+      outline: none;
+      transition: all 0.2s ease;
+      letter-spacing: 0.05em;
+    }
+
+    .auth-input:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.35);
+      background: rgba(0, 0, 0, 0.65);
+    }
+
+    .auth-input.shake {
+      animation: authShake 0.4s ease;
+      border-color: var(--accent-red) !important;
+      box-shadow: 0 0 16px rgba(244, 63, 94, 0.45) !important;
+    }
+
+    @keyframes authShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* Tactile Meta Badges on Cover */
+    .tactile-meta-badge {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(16, 28, 58, 0.50) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      padding: 12px 18px;
+      border-radius: 12px;
+      box-shadow: 
+        inset 0 1px 0 rgba(255, 255, 255, 0.30),
+        0 8px 24px rgba(0, 0, 0, 0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    /* Keycaps: Sleek Translucent Glass */
+    kbd {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      border-bottom: 1.5px solid rgba(0, 229, 255, 0.5);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      display: inline-block;
+    }
+
+    /* Frosted Tab Bar Track & Chiclet Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+      background: rgba(8, 14, 28, 0.55);
+      backdrop-filter: blur(16px);
+      padding: 4px;
+      border-radius: 9px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      width: fit-content;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: #E2E8F0;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .tab-btn.active {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+    }
+
+    /* Error Box */
+    .error-box {
+      background: rgba(244, 63, 94, 0.09);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      border-left: 4px solid var(--accent-red);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #FECDD3;
+    }
+
+    /* OVERVIEW MODAL */
+    .overview-modal {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(4, 7, 16, 0.90);
+      backdrop-filter: blur(18px);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 32px 48px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s;
+    }
+
+    .overview-modal.open { opacity: 1; visibility: visible; }
+
+    .overview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .overview-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFFFFF;
+      letter-spacing: -0.01em;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      overflow-y: auto;
+      padding-bottom: 24px;
+    }
+
+    .overview-thumb {
+      background: var(--surface-card);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+      display: flex;
+      flex-direction: column;
+      height: 125px;
+    }
+
+    .overview-thumb:hover, .overview-thumb.current {
+      border-color: var(--accent-cyan);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card-lift);
+      background: var(--surface-card-hover);
+    }
+
+    .thumb-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .thumb-title {
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.35;
+    }
+
+    .thumb-cat {
+      margin-top: auto;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 1280px) {
+      :root { --slide-width: 95vw; --slide-height: 53.43vw; }
+    }
+  
+    /* --- REACTBITS GRAINIENT BACKGROUND --- */
+    .grainient-bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .grainient-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- REACTBITS GRAINIENT WEBGL2 BACKGROUND -->
+  <div class="grainient-bg-container" id="grainientContainer">
+    <canvas id="grainientCanvas" class="grainient-canvas" aria-hidden="true"></canvas>
+  </div>
+
+
+  <!-- TOP DECK HEADER -->
+  <header class="deck-header">
+    <div class="brand-meta">
+      <span class="brand-tag"><span class="status-led"></span>SMBD LANJUT</span>
+      <span class="brand-title">Materi Pengayaan: Stored Procedure, UDF, Cursor & Error Handling</span>
+    </div>
+
+    <div class="deck-controls">
+      <span class="slide-counter" id="slideIndicator">01 / 13</span>
+      <button class="ctrl-btn" id="btnPrev" title="Slide Sebelumnya (Panah Kiri)"><i class="ph-bold ph-caret-left"></i> Prev</button>
+      <button class="ctrl-btn" id="btnNext" title="Slide Berikutnya (Panah Kanan / Spasi)">Next <i class="ph-bold ph-caret-right"></i></button>
+      <button class="ctrl-btn" id="btnOverview" title="Galeri Seluruh Slide (Esc)"><i class="ph-bold ph-grid-four"></i> Grid</button>
+      <button class="ctrl-btn" id="btnFullscreen" title="Layar Penuh (F)"><i class="ph-bold ph-corners-out"></i> Fullscreen</button>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </header>
+
+  <!-- PRESENTATION MAIN STAGE -->
+  <main class="deck-stage">
+        <div class="slide-frame">
+      <div class="slides-wrapper" id="slidesWrapper">
+<!-- ==================== SLIDE 01: HERO COVER ==================== -->
+        <section class="slide active" data-slide="1" data-cat="PENGAYAAN MODUL 4">
+          <div class="slide-label-row">
+            <span class="slide-category">SISTEM INFORMASI 2024/2025 · SMBD LANJUT</span>
+            <span class="slide-submeta">Universitas Amikom Yogyakarta</span>
+          </div>
+
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 900px;">
+            <h1 style="font-family: var(--font-display); font-size: 38px; font-weight: 800; color: #FFF; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 16px;">
+              Pemrograman Prosedural Database: <span style="color: var(--accent-cyan);">Stored Procedure, UDF &amp; Cursor</span>
+            </h1>
+            <p style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin-bottom: 26px;">
+              Penyusunan logika bisnis terpusat di sisi server (RDBMS): User Defined Function (UDF), Stored Procedure dengan parameter IN/OUT/INOUT, iterasi baris per baris dengan CURSOR, dan penanganan galat terstruktur (SIGNAL SQLSTATE &amp; HANDLER) pada kasus ritel minimarket 3NF.
+            </p>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 32px;">
+              <div class="tactile-meta-badge">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Materi Praktikum</div>
+                <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">Pengayaan Praktikum 4</div>
+              </div>
+              <div class="tactile-meta-badge">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Studi Kasus Ritel</div>
+                <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">Otomasi Nota &amp; Stok 3NF</div>
+              </div>
+              <div class="tactile-meta-badge">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Tantangan Tugas</div>
+                <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">10 Soal Bertingkat + Kunci Solusi</div>
+              </div>
+            </div>
+
+            <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+              Tekan <kbd>Space</kbd> atau <kbd>→</kbd> untuk navigasi · <kbd>Esc</kbd> untuk galeri
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Laboratorium Sistem Informasi · Pengayaan SMBD Lanjut</span>
+            <span>Slide 01 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 02: ARSITEKTUR CLIENT-SERVER ==================== -->
+        <section class="slide" data-slide="2" data-cat="ARSITEKTUR ROUTINE">
+          <div class="slide-label-row">
+            <span class="slide-category">01 · ARSITEKTUR RUTIN</span>
+            <span class="slide-submeta">Efisiensi Jaringan &amp; Kompilasi RDBMS</span>
+          </div>
+          <h2 class="slide-title">Mengapa Memindahkan Logika ke Sisi Server?</h2>
+          <p class="slide-description">
+            Stored Routine memindahkan beban eksekusi logika bisnis dari aplikasi klien langsung ke memori database engine, memberikan 4 keuntungan fundamental:
+          </p>
+
+          <div class="card-grid-4" style="flex: 1;">
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">01</span>
+                <span class="tech-card-title">Reduksi Latensi</span>
+              </div>
+              <p class="tech-card-p">
+                Menggantikan belasan kueri SELECT dan UPDATE bolak-balik jaringan menjadi satu perintah <code style="color:var(--accent-cyan)">CALL</code>, memangkas *network latency* secara drastis.
+              </p>
+            </div>
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">02</span>
+                <span class="tech-card-title">Logika Terpusat</span>
+              </div>
+              <p class="tech-card-p">
+                Formula bisnis (diskon, aturan poin member, batas stok) didefinisikan satu kali di database; seluruh aplikasi kasir (desktop/web/mobile) menggunakan aturan seragam.
+              </p>
+            </div>
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">03</span>
+                <span class="tech-card-title">Execution Cache</span>
+              </div>
+              <p class="tech-card-p">
+                Rencana eksekusi (*execution plan*) dikompilasi satu kali dan disimpan di memori buffer RDBMS. Eksekusi berikutnya berjalan instan tanpa parsing kueri ulang.
+              </p>
+            </div>
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">04</span>
+                <span class="tech-card-title">Isolasi Izin Akses</span>
+              </div>
+              <p class="tech-card-p">
+                Kasir cukup diberi izin <code style="color:var(--accent-cyan)">EXECUTE</code> pada procedure penjualan tanpa diberi izin langsung mengubah tabel master produk dan kasir.
+              </p>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 1: Konsep Dasar &amp; Arsitektur Stored Routines</span>
+            <span>Slide 02 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 03: FUNCTION VS PROCEDURE ==================== -->
+        <section class="slide" data-slide="3" data-cat="KOMPARASI RUTIN">
+          <div class="slide-label-row">
+            <span class="slide-category">02 · KOMPARASI HAKIKI</span>
+            <span class="slide-submeta">Stored Function vs Stored Procedure</span>
+          </div>
+          <h2 class="slide-title">Perbedaan Hakiki: Function vs Procedure</h2>
+          <p class="slide-description">
+            Meskipun sama-sama blok kode terkompilasi, keduanya memiliki batasan arsitektural dan tujuan penggunaan yang sangat berbeda:
+          </p>
+
+          <div class="table-sunken-frame">
+            <table class="slide-table">
+              <thead>
+                <tr>
+                  <th style="width: 24%;">Parameter Karakteristik</th>
+                  <th style="width: 38%;">User Defined Function (UDF)</th>
+                  <th style="width: 38%;">Stored Procedure</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Nilai Kembalian (Return)</strong></td>
+                  <td><span style="color:var(--accent-cyan); font-weight:700;">Wajib 1 nilai skalar</span> via klausa <code style="color:var(--accent-cyan)">RETURNS</code> &amp; pernyataan <code style="color:var(--accent-cyan)">RETURN</code>.</td>
+                  <td>Tidak memiliki return langsung; mengembalikan nilai via parameter <code style="color:var(--accent-cyan)">OUT / INOUT</code> atau kueri result set.</td>
+                </tr>
+                <tr>
+                  <td><strong>Metode Pemanggilan</strong></td>
+                  <td>Dipanggil di dalam ekspresi kueri SQL biasa (<code style="color:#FFF;">SELECT fc_name(), WHERE fc_name() &gt; 0</code>).</td>
+                  <td>Dipanggil secara mandiri sebagai perintah terpisah: <code style="color:#FFF;">CALL sp_name(argumen);</code>.</td>
+                </tr>
+                <tr>
+                  <td><strong>Manipulasi Fisik (DML)</strong></td>
+                  <td><span style="color:var(--accent-red); font-weight:600;">Sangat dibatasi</span>; dilarang mengubah state tabel (INSERT/UPDATE/DELETE) pada konteks kueri baca.</td>
+                  <td><span style="color:var(--accent-green); font-weight:600;">Bebas DML penuh</span>; dapat memutasi data, menjalankan transaksi (START TRANSACTION/COMMIT), dan dynamic SQL.</td>
+                </tr>
+                <tr>
+                  <td><strong>Fokus Penggunaan</strong></td>
+                  <td>Kalkulasi skalar, format teks, konversi mata uang, atau generator kode unik.</td>
+                  <td>Alur kerja transaksi multi-tabel, batch processing berkala, dan otomasi checkout kasir.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 1.2: Perbedaan Hakiki Function vs Stored Procedure</span>
+            <span>Slide 03 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 04: USER DEFINED FUNCTION ==================== -->
+        <section class="slide" data-slide="4" data-cat="FUNCTION (UDF)">
+          <div class="slide-label-row">
+            <span class="slide-category">03 · SINTAKS &amp; UDF</span>
+            <span class="slide-submeta">DETERMINISTIC &amp; Skalar Computing</span>
+          </div>
+          <h2 class="slide-title">User Defined Function (UDF) di MySQL</h2>
+          <p class="slide-description">
+            UDF memungkinkan pembuatan fungsi komputasi mandiri. Perhatikan deklarasi karakteristik penentu agar fungsi optimal:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>CONTOH: GENERATOR NOMOR NOTA OTOMATIS</span>
+                <button class="code-copy-btn" onclick="copySnippet('codeUDF1')">Copy SQL</button>
+              </div>
+              <div class="code-content" id="codeUDF1"><span class="kw">DELIMITER</span> $$
+<span class="kw">CREATE FUNCTION</span> fcGenerateNoNota(tgl <span class="kw">DATE</span>)
+<span class="kw">RETURNS CHAR</span>(10)
+<span class="kw">DETERMINISTIC</span>
+<span class="kw">READS SQL DATA</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> tgl_prefix <span class="kw">CHAR</span>(6);
+    <span class="kw">DECLARE</span> last_seq <span class="kw">INT DEFAULT</span> 0;
+    
+    <span class="kw">SET</span> tgl_prefix = <span class="fn">DATE_FORMAT</span>(tgl, <span class="str">'%y%m%d'</span>);
+    
+    <span class="kw">SELECT</span> <span class="fn">IFNULL</span>(<span class="fn">MAX</span>(<span class="fn">CAST</span>(<span class="fn">RIGHT</span>(nonota, 4) <span class="kw">AS UNSIGNED</span>)), 0)
+    <span class="kw">INTO</span> last_seq
+    <span class="kw">FROM</span> <span class="tbl">nota</span>
+    <span class="kw">WHERE</span> <span class="fn">LEFT</span>(nonota, 6) = tgl_prefix;
+    
+    <span class="kw">RETURN</span> <span class="fn">CONCAT</span>(tgl_prefix, <span class="fn">LPAD</span>(last_seq + 1, 4, <span class="str">'0'</span>));
+<span class="kw">END</span>$$
+<span class="kw">DELIMITER</span> ;
+
+<span class="cm">-- Contoh Output: '2208030003'</span>
+<span class="kw">SELECT</span> fcGenerateNoNota(<span class="str">'2022-08-03'</span>) <span class="kw">AS</span> nota_baru;</div>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">ATURAN</span>
+                <span class="tech-card-title">Karakteristik Penentu UDF</span>
+              </div>
+              <ul style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
+                <li>
+                  <strong style="color:var(--accent-cyan);">DETERMINISTIC:</strong> Selalu mengembalikan output yang sama jika input argumennya sama. Wajib dideklarasikan pada server MySQL dengan binary logging aktif untuk replikasi yang aman.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">NOT DETERMINISTIC:</strong> Fungsi dapat mengembalikan nilai berbeda pada pemanggilan berulang (contoh: membaca fungsi waktu <code style="color:var(--accent-cyan)">NOW()</code> atau tabel fisik).
+                </li>
+                <li>
+                  <strong style="color:#FFF;">READS SQL DATA:</strong> Menyatakan eksplisit bahwa fungsi membaca data tabel fisik (<code style="color:var(--accent-cyan)">SELECT</code>) tanpa memodifikasinya.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">NO SQL:</strong> Murni komputasi matematika/string tanpa kueri SQL ke tabel fisik apa pun.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 2: User Defined Function (UDF) di MySQL</span>
+            <span>Slide 04 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 05: PARAMETER IN OUT INOUT ==================== -->
+        <section class="slide" data-slide="5" data-cat="PARAMETER SP">
+          <div class="slide-label-row">
+            <span class="slide-category">04 · PARAMETER PROCEDURE</span>
+            <span class="slide-submeta">Aliran Data: IN vs OUT vs INOUT</span>
+          </div>
+          <h2 class="slide-title">Tiga Mode Parameter Stored Procedure</h2>
+          <p class="slide-description">
+            Stored Procedure tidak menggunakan klausa RETURN, melainkan mengontrol aliran data keluar-masuk melalui 3 tipe parameter:
+          </p>
+
+          <div class="card-grid-3" style="flex: 1;">
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">IN</span>
+                <span class="tech-card-title">Input Parameter</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Mode bawaan (default). Nilai dikirim oleh pemanggil ke dalam procedure. Di dalam procedure nilainya bersifat *read-only* bagi pemanggil (modifikasi di dalam tidak merubah variabel luar).
+              </p>
+              <div class="code-box" style="height: 120px;">
+                <div class="code-content" style="font-size: 11px;"><span class="kw">CREATE PROCEDURE</span> spCek(
+    <span class="kw">IN</span> p_kd <span class="kw">CHAR</span>(4)
+) ...</div>
+              </div>
+            </div>
+
+            <div class="tech-card highlight">
+              <div class="tech-card-header">
+                <span class="tech-card-num">OUT</span>
+                <span class="tech-card-title">Output Parameter</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Diinisialisasi sebagai NULL saat procedure dipanggil. Procedure mengisi nilainya dengan hasil proses, dan variabel pemanggil menerima nilai kembaliannya.
+              </p>
+              <div class="code-box" style="height: 120px;">
+                <div class="code-content" style="font-size: 11px;"><span class="kw">CREATE PROCEDURE</span> spGetInfo(
+    <span class="kw">OUT</span> p_nama <span class="kw">VARCHAR</span>(50)
+) ...
+<span class="kw">CALL</span> spGetInfo(@nm);</div>
+              </div>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">INOUT</span>
+                <span class="tech-card-title">Dua Arah (Mutasi)</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Membawa nilai awal dari pemanggil ke dalam procedure, dimodifikasi oleh logika procedure, dan nilai hasil akhirnya dikembalikan langsung ke pemanggil.
+              </p>
+              <div class="code-box" style="height: 120px;">
+                <div class="code-content" style="font-size: 11px;"><span class="kw">CREATE PROCEDURE</span> spDiskon(
+    <span class="kw">INOUT</span> p_hrg <span class="kw">INT</span>
+) ...
+<span class="kw">SET</span> @hrg = 10000;
+<span class="kw">CALL</span> spDiskon(@hrg);</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 3: Stored Procedure &amp; Manajemen Parameter</span>
+            <span>Slide 05 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 06: KONTROL ALUR LOGIKA ==================== -->
+        <section class="slide" data-slide="6" data-cat="CONTROL FLOW">
+          <div class="slide-label-row">
+            <span class="slide-category">05 · KONTROL ALUR</span>
+            <span class="slide-submeta">Percabangan &amp; Perulangan di Blok BEGIN-END</span>
+          </div>
+          <h2 class="slide-title">Struktur Kendali Prosedural di MySQL</h2>
+          <p class="slide-description">
+            Blok eksekusi <code style="color:var(--accent-cyan)">BEGIN ... END</code> mendukung kontrol alur komputasi lengkap untuk menerapkan aturan bisnis yang dinamis:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">CONDITIONAL</span>
+                <span class="tech-card-title">IF-THEN-ELSE &amp; CASE</span>
+              </div>
+              <div class="code-box" style="flex: 1;">
+                <div class="code-content" style="font-size: 11.5px;"><span class="cm">-- Percabangan Bersyarat</span>
+<span class="kw">IF</span> v_stok = 0 <span class="kw">THEN</span>
+    <span class="kw">SET</span> status = <span class="str">'HABIS'</span>;
+<span class="kw">ELSEIF</span> v_stok &lt; 10 <span class="kw">THEN</span>
+    <span class="kw">SET</span> status = <span class="str">'KRITIS'</span>;
+<span class="kw">ELSE</span>
+    <span class="kw">SET</span> status = <span class="str">'AMAN'</span>;
+<span class="kw">END IF</span>;
+
+<span class="cm">-- Evaluasi Banyak Nilai dengan CASE</span>
+<span class="kw">CASE</span> p_jenkel
+    <span class="kw">WHEN</span> <span class="str">'L'</span> <span class="kw">THEN</span> <span class="kw">SET</span> label = <span class="str">'Laki-laki'</span>;
+    <span class="kw">WHEN</span> <span class="str">'P'</span> <span class="kw">THEN</span> <span class="kw">SET</span> label = <span class="str">'Perempuan'</span>;
+    <span class="kw">ELSE</span> <span class="kw">SET</span> label = <span class="str">'Tidak Diketahui'</span>;
+<span class="kw">END CASE</span>;</div>
+              </div>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">LOOPING</span>
+                <span class="tech-card-title">LOOP, WHILE, &amp; REPEAT</span>
+              </div>
+              <div class="code-box" style="flex: 1;">
+                <div class="code-content" style="font-size: 11.5px;"><span class="cm">-- 1. LOOP dengan Label &amp; LEAVE (Pemberhentian Eksplisit)</span>
+my_loop: <span class="kw">LOOP</span>
+    <span class="kw">IF</span> v_selesai = 1 <span class="kw">THEN</span>
+        <span class="kw">LEAVE</span> my_loop;
+    <span class="kw">END IF</span>;
+<span class="kw">END LOOP</span> my_loop;
+
+<span class="cm">-- 2. WHILE (Uji Kondisi di Awal)</span>
+<span class="kw">WHILE</span> v_counter &lt; 10 <span class="kw">DO</span>
+    <span class="kw">SET</span> v_counter = v_counter + 1;
+<span class="kw">END WHILE</span>;
+
+<span class="cm">-- 3. REPEAT (Uji Kondisi di Akhir)</span>
+<span class="kw">REPEAT</span>
+    <span class="kw">SET</span> v_counter = v_counter + 1;
+<span class="kw">UNTIL</span> v_counter &gt;= 10 <span class="kw">END REPEAT</span>;</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 4: Kontrol Alur Logika (Control Flow Statements)</span>
+            <span>Slide 06 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 07: CURSOR & SIKLUS HIDUP ==================== -->
+        <section class="slide" data-slide="7" data-cat="CURSOR & ITERASI">
+          <div class="slide-label-row">
+            <span class="slide-category">06 · ITERASI ROW-BY-ROW</span>
+            <span class="slide-submeta">Mekanisme Pengolahan Data Individual</span>
+          </div>
+          <h2 class="slide-title">CURSOR: 4 Siklus Hidup Iterasi Data</h2>
+          <p class="slide-description">
+            Kueri SQL standar bekerja berbasis himpunan (*set-based*). CURSOR digunakan saat sistem harus mengevaluasi aturan individual untuk setiap baris data secara berurutan:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>CONTOH: CURSOR BONUS POIN CUSTOMER</span>
+                <button class="code-copy-btn" onclick="copySnippet('codeCursor')">Copy SQL</button>
+              </div>
+              <div class="code-content" id="codeCursor"><span class="cm">-- 1. Deklarasi Cursor &amp; Handler NOT FOUND</span>
+<span class="kw">DECLARE</span> curCustomer <span class="kw">CURSOR FOR</span>
+    <span class="kw">SELECT</span> kodecus, pointterkumpul 
+    <span class="kw">FROM</span> <span class="tbl">customer</span> <span class="kw">WHERE</span> kodecus &lt;&gt; <span class="str">'M0000'</span>;
+
+<span class="kw">DECLARE CONTINUE HANDLER FOR NOT FOUND SET</span> v_done = 1;
+
+<span class="cm">-- 2. Membuka Cursor</span>
+<span class="kw">OPEN</span> curCustomer;
+
+<span class="cm">-- 3. Loop Pengambilan Baris per Baris</span>
+bacaLoop: <span class="kw">LOOP</span>
+    <span class="kw">FETCH</span> curCustomer <span class="kw">INTO</span> v_kode, v_poin;
+    <span class="kw">IF</span> v_done = 1 <span class="kw">THEN</span>
+        <span class="kw">LEAVE</span> bacaLoop;
+    <span class="kw">END IF</span>;
+    <span class="cm">-- Logika update individual</span>
+    <span class="kw">UPDATE</span> <span class="tbl">customer</span> <span class="kw">SET</span> pointterkumpul = pointterkumpul + 10 
+    <span class="kw">WHERE</span> kodecus = v_kode;
+<span class="kw">END LOOP</span> bacaLoop;
+
+<span class="cm">-- 4. Menutup Memori Cursor</span>
+<span class="kw">CLOSE</span> curCustomer;</div>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">SIKLUS</span>
+                <span class="tech-card-title">Tahapan Eksekusi Memori</span>
+              </div>
+              <ol style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
+                <li>
+                  <strong style="color:var(--accent-cyan);">DECLARE CURSOR:</strong> Mendaftarkan kueri SELECT yang akan ditampung ke dalam pointer memori.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">DECLARE HANDLER:</strong> Mencegah fatal error saat iterasi mencapai baris terakhir dengan mengeset flag selesai (<code style="color:var(--accent-cyan)">v_done = 1</code>).
+                </li>
+                <li>
+                  <strong style="color:#FFF;">OPEN:</strong> Mengalokasikan ruang memori di server dan mengeksekusi kueri pembentuk cursor.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">FETCH:</strong> Memindahkan penunjuk baris (*pointer*) maju 1 baris dan menyalin nilainya ke variabel lokal.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">CLOSE:</strong> Membebaskan memori kerja server RDBMS setelah proses iterasi selesai.
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 5: Cursor &amp; Iterasi Baris Data di MySQL</span>
+            <span>Slide 07 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 08: ERROR HANDLING ==================== -->
+        <section class="slide" data-slide="8" data-cat="ERROR HANDLING">
+          <div class="slide-label-row">
+            <span class="slide-category">07 · PENANGANAN GALAT</span>
+            <span class="slide-submeta">Integritas Transaksi &amp; Validasi Kustom</span>
+          </div>
+          <h2 class="slide-title">Penanganan Galat: HANDLER &amp; SIGNAL SQLSTATE</h2>
+          <p class="slide-description">
+            Aplikasi produksi wajib mencegah korupsi data transaksi melalui penanganan eksepsi terstruktur dan pelemparan pesan galat kustom:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>CONTOH: VALIDASI STOK VIA SIGNAL</span>
+                <button class="code-copy-btn" onclick="copySnippet('codeSignal')">Copy SQL</button>
+              </div>
+              <div class="code-content" id="codeSignal"><span class="kw">CREATE PROCEDURE</span> spPotongStok(
+    <span class="kw">IN</span> p_kd <span class="kw">CHAR</span>(4), 
+    <span class="kw">IN</span> p_qty <span class="kw">INT</span>
+)
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> v_stok <span class="kw">INT</span>;
+    
+    <span class="kw">SELECT</span> stok <span class="kw">INTO</span> v_stok 
+    <span class="kw">FROM</span> <span class="tbl">produk</span> <span class="kw">WHERE</span> kodeproduk = p_kd;
+    
+    <span class="cm">-- Melempar Error Kustom jika stok tidak mencukupi</span>
+    <span class="kw">IF</span> v_stok &lt; p_qty <span class="kw">THEN</span>
+        <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span>
+        <span class="kw">SET MESSAGE_TEXT</span> = <span class="str">'Transaksi Dibatalkan: Stok barang di toko tidak mencukupi!'</span>;
+    <span class="kw">END IF</span>;
+    
+    <span class="kw">UPDATE</span> <span class="tbl">produk</span> <span class="kw">SET</span> stok = stok - p_qty <span class="kw">WHERE</span> kodeproduk = p_kd;
+<span class="kw">END</span>;</div>
+            </div>
+
+            <div class="tech-card highlight">
+              <div class="tech-card-header">
+                <span class="tech-card-num" style="background:rgba(244,63,94,0.15); color:var(--accent-red);">RESPON</span>
+                <span class="tech-card-title">Mekanisme Proteksi Atomik</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Saat stok tidak mencukupi, perintah <code style="color:var(--accent-red)">SIGNAL SQLSTATE '45000'</code> membatalkan eksekusi dan mengembalikan pesan galat ramah pengguna:
+              </p>
+              <div class="error-box">
+                ERROR 1644 (45000): Transaksi Dibatalkan: Stok barang di toko tidak mencukupi!
+              </div>
+              <p class="tech-card-p" style="margin-top: 12px; font-size: 12px;">
+                <strong style="color:#FFF;">DECLARE EXIT HANDLER FOR SQLEXCEPTION:</strong><br>
+                Dapat dipadukan dengan <code style="color:var(--accent-cyan)">ROLLBACK</code> untuk memastikan seluruh mutasi tabel dibatalkan seketika jika ada salah satu kueri yang gagal dieksekusi.
+              </p>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 6: Penanganan Galat &amp; Integritas Transaksi</span>
+            <span>Slide 08 / 13</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 09: SKENARIO CHECKOUT ==================== -->
+                <!-- ==================== SLIDE 09: DOWNLOAD SKRIP SQL & SETUP DATABASE ==================== -->
+        <section class="slide" data-slide="9" data-cat="SETUP BASIS DATA">
+          <div class="slide-label-row">
+            <span class="slide-category">08 · SETUP BASIS DATA</span>
+            <span class="slide-submeta">Normalisasi 3NF Kasus Minimarket Kelompok 7</span>
+          </div>
+          <h2 class="slide-title">Unduh Skrip SQL &amp; Import Database Minimarket</h2>
+          <p class="slide-description">
+            Sebelum memulai pengujian fungsi, prosedur, dan cursor, siapkan database <code style="color:var(--accent-cyan);">minimarket_db</code> (5 tabel 3NF + data transaksi awal) di server MySQL lokal Anda:
+          </p>
+
+          <div class="card-grid-2">
+            <div class="tech-card action-card" style="justify-content: space-between;">
+              <div>
+                <div class="tech-card-header">
+                  <span class="tech-card-num">FILE</span>
+                  <span class="tech-card-title">Berkas DDL &amp; DML (minimarket_db.sql)</span>
+                </div>
+                <p class="tech-card-p" style="margin-bottom: 12px; font-size: 12.5px; line-height: 1.5;">
+                  Skrip SQL ini memuat pembuatan database, skema 5 tabel fisik (KASIR, CUSTOMER, PRODUK, NOTA, ITEMNOTA) dengan batasan integritas penuh (CHECK, FK CASCADE), serta 16 baris data transaksi awal.
+                </p>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                  <button class="ctrl-btn" style="flex: 1.15; background: linear-gradient(135deg, rgba(0, 229, 255, 0.25) 0%, rgba(37, 99, 235, 0.40) 100%); border-color: rgba(0, 229, 255, 0.55); color: #FFF; font-weight: 700; padding: 10px 14px; justify-content: center; font-size: 12.5px; box-shadow: 0 4px 14px rgba(0, 229, 255, 0.22);" onclick="downloadSqlFile()">
+                    <i class="ph-bold ph-download-simple" style="font-size: 15px;"></i> Unduh minimarket_db.sql
+                  </button>
+                  <button class="ctrl-btn" style="flex: 0.85; padding: 10px 14px; justify-content: center; font-size: 12.5px;" onclick="copyFullSqlScript()">
+                    <i class="ph-bold ph-copy" style="font-size: 15px;"></i> Salin Skrip SQL
+                  </button>
+                </div>
+              </div>
+
+              <div style="background: rgba(0,0,0,0.32); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 10px 12px;">
+                <div style="font-size: 11px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 5px; text-transform: uppercase; font-family: var(--font-mono); letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px;">
+                  <i class="ph-bold ph-terminal-window"></i> Cara Import di MySQL Lokal:
+                </div>
+                <div style="font-family: var(--font-mono); font-size: 11px; color: #CBD5E1; line-height: 1.55;">
+                  <div style="margin-bottom: 3px;">• <strong>Terminal CLI:</strong> <code style="color:#FFF; background: rgba(255,255,255,0.08); padding: 1px 4px; border-radius: 3px;">mysql -u root -p &lt; minimarket_db.sql</code></div>
+                  <div style="margin-bottom: 3px;">• <strong>phpMyAdmin:</strong> Buka tab <em>Import</em> &rarr; Pilih file &rarr; Klik <em>Go</em></div>
+                  <div>• <strong>Workbench / DBeaver:</strong> Buka file SQL &rarr; <em>Execute (Ctrl+Shift+Enter)</em></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>PREVIEW DDL: MINIMARKET_DB.SQL</span>
+                <button class="code-copy-btn" onclick="copySnippet('previewSqlDdl')"><i class="ph-bold ph-copy"></i> Copy DDL</button>
+              </div>
+              <div class="code-content" id="previewSqlDdl"><span class="cm">-- Skrip Basis Data Minimarket (3NF Kelompok 7)</span>
+<span class="kw">CREATE DATABASE IF NOT EXISTS</span> minimarket_db;
+<span class="kw">USE</span> minimarket_db;
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">kasir</span> (
+    KodeKasir <span class="kw">CHAR</span>(3) <span class="kw">PRIMARY KEY</span>,
+    NamaKasir <span class="kw">VARCHAR</span>(30) <span class="kw">NOT NULL</span>,
+    Pass <span class="kw">CHAR</span>(6) <span class="kw">NOT NULL CHECK</span> (<span class="fn">CHAR_LENGTH</span>(Pass) = 6)
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">customer</span> (
+    KodeCus <span class="kw">CHAR</span>(5) <span class="kw">PRIMARY KEY</span>,
+    NamaCus <span class="kw">VARCHAR</span>(50) <span class="kw">NOT NULL</span>,
+    TglLahir <span class="kw">DATE NULL</span>,
+    JenKelCus <span class="kw">CHAR</span>(1) <span class="kw">CHECK</span> (JenKelCus <span class="kw">IN</span> (<span class="str">'L'</span>,<span class="str">'P'</span>)),
+    AlmtCus <span class="kw">VARCHAR</span>(100) <span class="kw">DEFAULT</span> <span class="str">'Yogyakarta'</span>,
+    HPCus <span class="kw">VARCHAR</span>(15) <span class="kw">NULL</span>,
+    PointTerkumpul <span class="kw">INT NOT NULL DEFAULT</span> 0 <span class="kw">CHECK</span> (PointTerkumpul &gt;= 0)
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">produk</span> (
+    KodeProduk <span class="kw">CHAR</span>(4) <span class="kw">PRIMARY KEY</span>,
+    NamaProduk <span class="kw">VARCHAR</span>(50) <span class="kw">NOT NULL</span>,
+    Harga <span class="kw">INT NOT NULL CHECK</span> (Harga &gt;= 0),
+    stok <span class="kw">INT NOT NULL DEFAULT</span> 0 <span class="kw">CHECK</span> (stok &gt;= 0)
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">nota</span> (
+    Nonota <span class="kw">CHAR</span>(10) <span class="kw">PRIMARY KEY</span>,
+    KodeKasir <span class="kw">CHAR</span>(3) <span class="kw">NOT NULL</span>,
+    TglTran <span class="kw">DATE NOT NULL</span>,
+    KodeCus <span class="kw">CHAR</span>(5) <span class="kw">NOT NULL</span>,
+    <span class="kw">FOREIGN KEY</span> (KodeKasir) <span class="kw">REFERENCES</span> <span class="tbl">kasir</span>(KodeKasir) <span class="kw">ON UPDATE CASCADE</span>,
+    <span class="kw">FOREIGN KEY</span> (KodeCus) <span class="kw">REFERENCES</span> <span class="tbl">customer</span>(KodeCus) <span class="kw">ON UPDATE CASCADE</span>
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">itemnota</span> (
+    Nonota <span class="kw">CHAR</span>(10) <span class="kw">NOT NULL</span>,
+    KodeProduk <span class="kw">CHAR</span>(4) <span class="kw">NOT NULL</span>,
+    banyak <span class="kw">INT NOT NULL DEFAULT</span> 1 <span class="kw">CHECK</span> (banyak &gt;= 1),
+    hargajual <span class="kw">INT NOT NULL CHECK</span> (hargajual &gt;= 0),
+    <span class="kw">PRIMARY KEY</span> (Nonota, KodeProduk),
+    <span class="kw">FOREIGN KEY</span> (Nonota) <span class="kw">REFERENCES</span> <span class="tbl">nota</span>(Nonota) <span class="kw">ON UPDATE CASCADE ON DELETE CASCADE</span>,
+    <span class="kw">FOREIGN KEY</span> (KodeProduk) <span class="kw">REFERENCES</span> <span class="tbl">produk</span>(KodeProduk) <span class="kw">ON UPDATE CASCADE</span>
+);</div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 7: Persiapan Praktikum &amp; Skrip DDL/DML Basis Data</span>
+            <span>Slide 09 / 13</span>
+          </div>
+        </section>
+
+<section class="slide" data-slide="10" data-cat="STUDI KASUS 3NF">
+          <div class="slide-label-row">
+            <span class="slide-category">09 · KAMUS SKEMA 3NF</span>
+            <span class="slide-submeta">Sistem Basis Data Penjualan Minimarket (Kelompok 7)</span>
+          </div>
+          <h2 class="slide-title">Studi Kasus: Skema 5 Tabel Kasir Minimarket</h2>
+          <p class="slide-description">
+            Pilihlah tabel di bawah ini untuk memeriksa struktur fisik, batasan integritas, dan fungsi bisnisnya:
+          </p>
+
+          <div class="tab-bar" id="tableTabBar">
+            <button class="tab-btn active" onclick="switchTableTab('tbProduk')">PRODUK</button>
+            <button class="tab-btn" onclick="switchTableTab('tbKasir')">KASIR</button>
+            <button class="tab-btn" onclick="switchTableTab('tbCustomer')">CUSTOMER</button>
+            <button class="tab-btn" onclick="switchTableTab('tbNota')">NOTA</button>
+            <button class="tab-btn" onclick="switchTableTab('tbItemNota')">ITEMNOTA</button>
+          </div>
+
+          <div class="table-sunken-frame" style="padding: 14px;">
+            <div id="tableContainer">
+              <table class="slide-table">
+                <thead>
+                  <tr><th>Nama Kolom</th><th>Tipe Data</th><th>Batasan Integritas</th><th>Fungsi Bisnis</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><strong>KodeProduk</strong></td><td>CHAR(4)</td><td><span style="color:var(--accent-cyan); font-weight:600;">PRIMARY KEY, NOT NULL</span></td><td>Kode unik barang dagangan (contoh: 'P001')</td></tr>
+                  <tr><td><strong>NamaProduk</strong></td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Deskripsi nama barang</td></tr>
+                  <tr><td><strong>Harga</strong></td><td>INT</td><td>CHECK (Harga &gt;= 0), NOT NULL</td><td>Harga satuan resmi produk</td></tr>
+                  <tr><td><strong>Stok</strong></td><td>INT</td><td>CHECK (Stok &gt;= 0), DEFAULT 0</td><td>Jumlah unit persediaan di toko</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 7: Studi Kasus Sistem Basis Data Transaksi Minimarket</span>
+            <span>Slide 10 / 13</span>
+          </div>
+        </section>
+
+<section class="slide" data-slide="11" data-cat="TRANSAKSI CHECKOUT">
+          <div class="slide-label-row">
+            <span class="slide-category">10 · TRANSAKSI TERPADU</span>
+            <span class="slide-submeta">Integrasi Kasir, Customer, Nota, Item, &amp; Produk</span>
+          </div>
+          <h2 class="slide-title">Studi Kasus: Prosedur Checkout Kasir Otomatis</h2>
+          <p class="slide-description">
+            Mengintegrasikan seluruh materi (UDF generator nota, Stored Procedure, parameter OUT, mutasi stok, dan poin belanja):
+          </p>
+
+          <div class="code-box" style="flex: 1;">
+            <div class="code-box-header">
+              <span>PROCEDURE spCheckoutTransaksiBaru</span>
+              <button class="code-copy-btn" onclick="copySnippet('codeCheckout')"><i class="ph-bold ph-copy"></i> Copy SQL</button>
+            </div>
+            <div class="code-content" id="codeCheckout"><span class="kw">CREATE PROCEDURE</span> spCheckout(
+    <span class="kw">IN</span> p_kasir <span class="kw">CHAR</span>(3), <span class="kw">IN</span> p_cus <span class="kw">CHAR</span>(5), <span class="kw">IN</span> p_produk <span class="kw">CHAR</span>(4), <span class="kw">IN</span> p_qty <span class="kw">INT</span>,
+    <span class="kw">OUT</span> p_nonota <span class="kw">CHAR</span>(10), <span class="kw">OUT</span> p_total <span class="kw">INT</span>
+)
+<span class="kw">BEGIN</span>
+    <span class="kw">DECLARE</span> v_hrg <span class="kw">INT</span>; <span class="kw">DECLARE</span> v_stk <span class="kw">INT</span>; <span class="kw">DECLARE</span> v_poin <span class="kw">INT</span>;
+    <span class="kw">DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END</span>;
+    
+    <span class="kw">SELECT</span> harga, stok <span class="kw">INTO</span> v_hrg, v_stk <span class="kw">FROM</span> <span class="tbl">produk</span> <span class="kw">WHERE</span> kodeproduk = p_produk;
+    <span class="kw">IF</span> v_stk &lt; p_qty <span class="kw">THEN</span> <span class="kw">SIGNAL SQLSTATE</span> <span class="str">'45000'</span> <span class="kw">SET MESSAGE_TEXT</span> = <span class="str">'Stok Kurang'</span>; <span class="kw">END IF</span>;
+    
+    <span class="kw">SET</span> p_nonota = fcGenerateNoNota(<span class="fn">CURRENT_DATE</span>());
+    <span class="kw">SET</span> p_total = v_hrg * p_qty;
+    <span class="kw">SET</span> v_poin = <span class="fn">FLOOR</span>(p_total / 10000);
+    
+    <span class="kw">START TRANSACTION</span>;
+        <span class="kw">INSERT INTO</span> <span class="tbl">nota</span> <span class="kw">VALUES</span> (p_nonota, p_kasir, <span class="fn">CURRENT_DATE</span>(), p_cus);
+        <span class="kw">INSERT INTO</span> <span class="tbl">itemnota</span> <span class="kw">VALUES</span> (p_nonota, p_produk, p_qty, v_hrg);
+        <span class="kw">UPDATE</span> <span class="tbl">produk</span> <span class="kw">SET</span> stok = stok - p_qty <span class="kw">WHERE</span> kodeproduk = p_produk;
+        <span class="kw">IF</span> p_cus &lt;&gt; <span class="str">'M0000'</span> <span class="kw">AND</span> v_poin &gt; 0 <span class="kw">THEN</span>
+            <span class="kw">UPDATE</span> <span class="tbl">customer</span> <span class="kw">SET</span> pointterkumpul = pointterkumpul + v_poin <span class="kw">WHERE</span> kodecus = p_cus;
+        <span class="kw">END IF</span>;
+    <span class="kw">COMMIT</span>;
+<span class="kw">END</span>;</div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 7: Studi Kasus: Prosedur Transaksi Checkout Kasir Terpadu</span>
+            <span>Slide 11 / 13</span>
+          </div>
+        </section>
+
+<section class="slide" data-slide="12" data-cat="TUGAS MAHASISWA">
+          <div class="slide-label-row">
+            <span class="slide-category">11 · TUGAS PRAKTIKUM</span>
+            <span class="slide-submeta">10 Soal Latihan Mandiri 4 Tingkat Kesulitan</span>
+          </div>
+          <h2 class="slide-title">Lembar Tantangan Praktikum Mahasiswa</h2>
+          <p class="slide-description">
+            Pilihlah tingkatan tantangan untuk melihat rincian soal tugas yang bersih dari jawaban bagi praktikan:
+          </p>
+
+          <div class="tab-bar" id="taskTabBar">
+            <button class="tab-btn active" onclick="switchTaskTab('lv1')">Tingkat 1: UDF Skalar</button>
+            <button class="tab-btn" onclick="switchTaskTab('lv2')">Tingkat 2: Stored Procedure</button>
+            <button class="tab-btn" onclick="switchTaskTab('lv3')">Tingkat 3: CURSOR Loop</button>
+            <button class="tab-btn" onclick="switchTaskTab('lv4')">Tingkat 4: Error Handling</button>
+          </div>
+
+          <div class="task-sunken-frame" id="taskContainer">
+            <div style="margin-bottom: 14px;">
+              <strong style="color:var(--accent-cyan);">Soal 1 (UDF Evaluasi Persediaan Stok):</strong>
+              <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+                Buatlah UDF <code style="color:#FFF;">fcCekStatusStok(kd)</code> yang mengembalikan: 'KOSONG' jika stok = 0, 'KRITIS' jika 1 s.d. 5, dan 'TERSEDIA (X Unit)' jika &gt; 5. Uji dengan kueri SELECT pada tabel produk.
+              </p>
+            </div>
+            <div style="margin-bottom: 14px;">
+              <strong style="color:var(--accent-cyan);">Soal 2 (UDF Klasifikasi Member Loyal):</strong>
+              <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+                Buatlah UDF <code style="color:#FFF;">fcLevelLoyalitas(poin)</code> yang mengembalikan tingkat membership: 'PLATINUM' (&ge; 100), 'GOLD' (50-99), 'SILVER' (20-49), dan 'BRONZE' (&lt; 20).
+              </p>
+            </div>
+            <div>
+              <strong style="color:var(--accent-cyan);">Soal 3 (UDF Pemformatan Teks Rupiah):</strong>
+              <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+                Buatlah UDF <code style="color:#FFF;">fcFormatRupiah(nominal)</code> yang mengubah angka integer menjadi format string mata uang Indonesia dengan awalan 'Rp. ' dan pemisah ribuan titik (contoh: 15000 -&gt; 'Rp. 15.000').
+              </p>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 8: Lembar Tugas &amp; Latihan Soal Praktikum Mahasiswa</span>
+            <span>Slide 12 / 13</span>
+          </div>
+        </section>
+
+<section class="slide" data-slide="13" data-cat="PANDUAN ASPRAK">
+          <div class="slide-label-row">
+            <span class="slide-category">12 · KUNCI SOLUSI</span>
+            <span class="slide-submeta">Pedoman Khusus Dosen &amp; Asisten Praktikum</span>
+          </div>
+          <h2 class="slide-title">Kunci Jawaban &amp; Analisis Teknis</h2>
+          <p class="slide-description" id="solutionDesc">
+            Halaman ini diproteksi otentikasi agar mahasiswa dapat menyelesaikan latihan secara mandiri.
+          </p>
+
+          <!-- AUTHENTICATION GATE (LOCKED STATE) -->
+          <div id="solutionAuthGate" class="auth-gate-box">
+            <div class="auth-card">
+              <div class="auth-icon-wrap"><i class="ph-fill ph-lock-key" style="font-size: 26px; color: var(--accent-cyan);"></i></div>
+              <span class="slide-category" style="margin-bottom: 8px; font-size: 10.5px; padding: 2px 8px; display: inline-flex; align-items: center; gap: 5px;"><i class="ph-bold ph-shield-check"></i> AKSES KHUSUS ASPRAK</span>
+              <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 800; color: #FFF; margin-bottom: 6px;">Kunci Jawaban Terproteksi</h3>
+              <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px; max-width: 380px;">
+                Masukkan kata sandi otorisasi asisten praktikum atau dosen untuk membuka 10 skrip solusi dan pembahasan teknis lengkap.
+              </p>
+
+              <div class="auth-input-group">
+                <input type="password" id="asprakPassInput" class="auth-input" placeholder="Masukkan PIN / Sandi..." autocomplete="off">
+                <button class="ctrl-btn" id="btnUnlockSolutions" onclick="unlockSolutions()" style="background: linear-gradient(135deg, rgba(0, 229, 255, 0.28) 0%, rgba(37, 99, 235, 0.45) 100%); border-color: rgba(0, 229, 255, 0.6); color: #FFF; font-weight: 700; padding: 10px 16px; font-size: 12.5px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 229, 255, 0.25); display: inline-flex; align-items: center; gap: 6px;">
+                  <i class="ph-bold ph-lock-key-open"></i> Buka Kunci
+                </button>
+              </div>
+
+              <div id="authErrorMessage" style="font-size: 11.5px; color: var(--accent-red); margin-top: 6px; display: none; font-weight: 600;"></div>
+            </div>
+          </div>
+
+          <!-- UNLOCKED SOLUTION VIEW -->
+          <div id="solutionContent" style="display: none; flex-direction: column; flex: 1; min-height: 0;">
+            <div class="tab-bar" id="solutionTabBar" style="flex-wrap: wrap; justify-content: space-between; align-items: center;">
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; flex: 1;">
+                <button class="tab-btn active" onclick="loadSolution(1)">Soal 1</button>
+                <button class="tab-btn" onclick="loadSolution(2)">Soal 2</button>
+                <button class="tab-btn" onclick="loadSolution(3)">Soal 3</button>
+                <button class="tab-btn" onclick="loadSolution(4)">Soal 4</button>
+                <button class="tab-btn" onclick="loadSolution(5)">Soal 5</button>
+                <button class="tab-btn" onclick="loadSolution(6)">Soal 6</button>
+                <button class="tab-btn" onclick="loadSolution(7)">Soal 7</button>
+                <button class="tab-btn" onclick="loadSolution(8)">Soal 8</button>
+                <button class="tab-btn" onclick="loadSolution(9)">Soal 9</button>
+                <button class="tab-btn" onclick="loadSolution(10)">Soal 10</button>
+              </div>
+              <button class="ctrl-btn" onclick="lockSolutions()" style="padding: 5px 10px; font-size: 11px; border-color: rgba(244, 63, 94, 0.4); color: #FDA4AF; background: rgba(244, 63, 94, 0.12); margin-left: 10px; display: inline-flex; align-items: center; gap: 5px;" title="Kunci kembali portal solusi">
+                <i class="ph-bold ph-lock-key"></i> Kunci Akses
+              </button>
+            </div>
+
+            <div class="card-grid-2">
+              <div class="code-box">
+                <div class="code-box-header">
+                  <span id="solutionTitle">SOLUSI SQL: SOAL 1 (fcCekStatusStok)</span>
+                  <button class="code-copy-btn" onclick="copySnippet('solCodeContent')"><i class="ph-bold ph-copy"></i> Copy SQL</button>
+                </div>
+                <div class="code-content" id="solCodeContent">DELIMITER $$
+CREATE FUNCTION fcCekStatusStok(p_kodeproduk CHAR(4))
+RETURNS VARCHAR(30)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_stok INT;
+    DECLARE v_status VARCHAR(30);
+    SELECT stok INTO v_stok FROM produk WHERE kodeproduk = p_kodeproduk;
+    IF v_stok IS NULL THEN SET v_status = 'PRODUK TIDAK ADA';
+    ELSEIF v_stok = 0 THEN SET v_status = 'KOSONG';
+    ELSEIF v_stok <= 5 THEN SET v_status = 'KRITIS';
+    ELSE SET v_status = CONCAT('TERSEDIA (', v_stok, ' Unit)');
+    END IF;
+    RETURN v_status;
+END$$
+DELIMITER ;
+
+-- Pengujian:
+SELECT kodeproduk, namaproduk, stok, fcCekStatusStok(kodeproduk) AS status_stok FROM produk;</div>
+              </div>
+
+              <div class="tech-card action-card">
+                <div class="tech-card-header">
+                  <span class="tech-card-num">ANALISIS</span>
+                  <span class="tech-card-title">Penjelasan Logika &amp; Output</span>
+                </div>
+                <p class="tech-card-p" id="solAnalysis" style="line-height: 1.6;">
+                  Fungsi membaca data kolom stok dari tabel produk menggunakan klausa SELECT INTO dan mengevaluasi ambang batas unit menggunakan struktur kondisional IF-ELSEIF-ELSE.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 9: Lampiran Kunci Jawaban &amp; Pembahasan Lengkap</span>
+            <span id="solutionAuthStatusBadge">Slide 13 / 13</span>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- OVERVIEW / GRID MODAL (ESC) -->
+  <div class="overview-modal" id="overviewModal">
+    <div class="overview-header">
+      <div class="overview-title">Galeri Slide Presentasi: Stored Routine (13 Slides)</div>
+      <button class="ctrl-btn" id="btnCloseOverview"><i class="ph-bold ph-x"></i> Tutup (Esc)</button>
+    </div>
+    <div class="overview-grid" id="overviewGrid"></div>
+  </div>
+
+  <script>
+
+// --- REACTBITS GRAINIENT SHADERS & MATH ---
+const MAX_COLORS = 8;
+const MAX_STIRS = 24;
+const MAX_TWIRLS = 4;
+const STIR_LIFE = 1.3;
+const STIR_STEP = 0.06;
+const TWIRL_LIFE = 2.6;
+const INTRO_SECONDS = 1.6;
+const DEFAULT_COLORS = ["#120f17", "#2a0f0a", "#9a3412", "#f97316", "#fed7aa"];
+const TYPES = { linear: 0, radial: 1 };
+const LIFT = 0.2;
+const VERTEX = `#version 300 es
+out vec2 vUv;
+void main() {
+  vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+  vUv = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+const FIELD = `#version 300 es
+precision highp float;
+precision highp int;
+uniform float uAspect;
+uniform float uTime;
+uniform vec3 uRamp[8];
+uniform int uCount;
+uniform int uType;
+uniform vec2 uDir;
+uniform float uExtent;
+uniform float uBands;
+uniform float uSoftness;
+uniform float uFlow;
+uniform float uScale;
+uniform float uSilk;
+uniform vec4 uStir[24];
+uniform float uStirWeight[24];
+uniform vec4 uTwirl[4];
+uniform vec2 uSeed;
+uniform float uContrast;
+uniform float uSaturation;
+uniform float uSettle;
+uniform float uReveal;
+in vec2 vUv;
+out vec4 outColor;
+
+vec2 hash2(vec2 p) {
+  vec3 q = fract(vec3(p.xyx) * vec3(0.1031, 0.103, 0.0973));
+  q += dot(q, q.yzx + 33.33);
+  return fract((q.xx + q.yz) * q.zy) * 2.0 - 1.0;
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+  float a = dot(hash2(i), f);
+  float b = dot(hash2(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+  float c = dot(hash2(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+  float d = dot(hash2(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+  return 0.5 + 0.5 * mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+vec2 drift(vec2 p, float t) {
+  vec2 w1 = vec2(
+    noise(p * 0.85 + vec2(t * 0.11, t * 0.07)),
+    noise(p * 0.85 + vec2(4.1, 1.7) - vec2(t * 0.08, t * 0.12))
+  );
+  vec2 w2 = vec2(
+    noise(p * 1.55 + w1 * 1.8 + vec2(1.3, 7.1) + t * 0.05),
+    noise(p * 1.55 + w1 * 1.8 + vec2(6.4, 2.2) - t * 0.06)
+  );
+  return (w1 - 0.5) * 1.1 + (w2 - 0.5) * 0.55;
+}
+
+vec2 warp(vec2 p) {
+  vec2 q = p / uScale;
+  if (uType == 1) {
+    float turn = uTime * 0.35;
+    q = mat2(cos(turn), sin(turn), -sin(turn), cos(turn)) * q;
+  } else {
+    q += vec2(-uDir.y, uDir.x) * uTime * 0.45;
+  }
+  return p + drift(q + uSeed, uTime) * uFlow * uScale * uSettle;
+}
+
+float coord(vec2 p) {
+  vec2 w = warp(p);
+  return uType == 1 ? 1.0 - length(w) * 1.1 : dot(w, uDir) / uExtent + 0.5;
+}
+
+vec3 labToRgb(vec3 lab) {
+  float l = lab.x + 0.3963377774 * lab.y + 0.2158037573 * lab.z;
+  float m = lab.x - 0.1055613458 * lab.y - 0.0638541728 * lab.z;
+  float s = lab.x - 0.0894841775 * lab.y - 1.2914855480 * lab.z;
+  l = l * l * l;
+  m = m * m * m;
+  s = s * s * s;
+  return vec3(
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+  );
+}
+
+vec3 encode(vec3 c) {
+  c = clamp(c, 0.0, 1.0);
+  return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c));
+}
+
+void main() {
+  vec2 p = (vUv - 0.5) * vec2(uAspect, 1.0);
+  for (int i = 0; i < 24; i++) {
+    float w = uStirWeight[i];
+    if (w <= 0.0) continue;
+    vec2 d = p - uStir[i].xy;
+    p -= uStir[i].zw * w * exp(-dot(d, d) / 0.045);
+  }
+  for (int i = 0; i < 4; i++) {
+    float angle = uTwirl[i].z;
+    if (angle == 0.0) continue;
+    vec2 d = p - uTwirl[i].xy;
+    float a = angle * exp(-dot(d, d) / (uTwirl[i].w * uTwirl[i].w));
+    float c = cos(a);
+    float s = sin(a);
+    p = uTwirl[i].xy + mat2(c, -s, s, c) * d;
+  }
+  float raw = coord(p);
+  float s = raw;
+  if (uBands > 1.0) {
+    s *= uBands;
+    float cycle = floor(s);
+    s = fract(s);
+    if (mod(cycle, 2.0) > 0.5) s = 1.0 - s;
+  }
+  s = clamp(s, 0.0, 1.0);
+  float scaled = s * float(uCount - 1);
+  int index = int(min(floor(scaled), float(uCount - 2)));
+  float f = scaled - float(index);
+  float edge = max(uSoftness * 0.5, fwidth(scaled) * 0.75);
+  float shaped = smoothstep(0.5 - edge, 0.5 + edge, f);
+  vec3 from = uRamp[0];
+  vec3 to = uRamp[1];
+  for (int i = 0; i < 7; i++) {
+    if (i == index) {
+      from = uRamp[i];
+      to = uRamp[i + 1];
+    }
+  }
+  vec3 lab = mix(from, to, shaped);
+  if (uSilk > 0.0) {
+    vec2 grad = vec2(coord(p + vec2(0.004, 0.0)) - raw, coord(p + vec2(0.0, 0.004)) - raw) / 0.004;
+    vec2 slope = grad * sin(3.14159265 * clamp(raw, 0.0, 1.0) * uBands) * uSilk * 4.0;
+    vec3 normal = normalize(vec3(-slope, 1.0));
+    vec3 light = normalize(vec3(-uDir.y, uDir.x, 1.2));
+    float diffuse = dot(normal, light) - light.z;
+    lab = uRamp[0] + (lab - uRamp[0]) * (1.0 + (diffuse * 0.35 + max(diffuse, 0.0) * diffuse * 0.6) * uSilk);
+  }
+  lab = mix(uRamp[0], lab, smoothstep(0.0, 1.0, uReveal * 1.5 - length(vUv - 0.5) * 0.6));
+  lab.x = (lab.x - 0.55) * uContrast + 0.55;
+  lab.yz *= uSaturation;
+  outColor = vec4(encode(labToRgb(lab)), 1.0);
+}`;
+const COMPOSITE = `#version 300 es
+precision highp float;
+uniform sampler2D uField;
+uniform float uGrain;
+uniform float uGrainSize;
+uniform float uFrame;
+in vec2 vUv;
+out vec4 outColor;
+
+float hash(vec2 p) {
+  vec3 q = fract(vec3(p.xyx) * 0.1031);
+  q += dot(q, q.yzx + 33.33);
+  return fract((q.x + q.y) * q.z);
+}
+
+float clump(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+void main() {
+  vec3 color = texture(uField, vUv).rgb;
+  vec2 pixel = gl_FragCoord.xy + uFrame * vec2(17.0, 59.0);
+  float fine = hash(pixel) + hash(pixel + 7.13) - 1.0;
+  float coarse = (clump(pixel / max(uGrainSize, 1.0)) - 0.5) * 2.0;
+  float grain = mix(fine, coarse, clamp(uGrainSize - 1.0, 0.0, 1.0) * 0.8);
+  float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+  color += grain * uGrain * (0.45 + 2.2 * luma * (1.0 - luma));
+  outColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+}`;
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const toLinear = (value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+const toLab = ([r, g, b]) => {
+  const lr = toLinear(r);
+  const lg = toLinear(g);
+  const lb = toLinear(b);
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s
+  ];
+};
+const compile = (gl, type, source) => {
+  const shader = gl.createShader(type);
+  if (!shader) return null;
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) return shader;
+  gl.deleteShader(shader);
+  return null;
+};
+const link = (gl, fragmentSource) => {
+  const vertex = compile(gl, gl.VERTEX_SHADER, VERTEX);
+  const fragment = compile(gl, gl.FRAGMENT_SHADER, fragmentSource);
+  const program = gl.createProgram();
+  if (!vertex || !fragment || !program) return null;
+  gl.attachShader(program, vertex);
+  gl.attachShader(program, fragment);
+  gl.linkProgram(program);
+  gl.deleteShader(vertex);
+  gl.deleteShader(fragment);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    gl.deleteProgram(program);
+    return null;
+  }
+  const uniforms = {};
+  const count = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < count; i++) {
+    const info = gl.getActiveUniform(program, i);
+    if (!info) continue;
+    const name = info.name.replace(/\[0\]$/, "");
+    uniforms[name] = gl.getUniformLocation(program, name);
+  }
+  return { program, uniforms };
+};
+
+
+function initGrainient(container, canvas, customOptions = {}) {
+  const defaults = {
+    colors: ['#050814', '#0a1638', '#0040b8', '#0066ff', '#00d4ff'],
+    type: 'linear',
+    angle: 45,
+    bands: 1.5,
+    speed: 0.75,
+    flow: 1.0,
+    scale: 1.15,
+    softness: 0.85,
+    silk: 0.30,
+    grainAmount: 0.08,
+    grainSize: 1.3,
+    grainAnimated: true,
+    contrast: 1.05,
+    saturation: 1.15,
+    variation: 0,
+    interactive: true,
+    stir: 1.0,
+    clickSwirl: true,
+    intro: true,
+    lightMode: false,
+    dpr: Math.min(window.devicePixelRatio || 1, 1.5)
+  };
+
+  const opts = Object.assign({}, defaults, customOptions);
+  const palette = (Array.isArray(opts.colors) && opts.colors.length ? opts.colors : DEFAULT_COLORS).slice(0, MAX_COLORS);
+  const settings = {
+    colors: palette.length > 1 ? palette : [palette[0], palette[0]],
+    type: TYPES[opts.type] ?? 0,
+    angle: opts.angle,
+    bands: clamp(opts.bands, 1, 8),
+    speed: Math.max(0, opts.speed),
+    flow: clamp(opts.flow, 0, 3),
+    scale: clamp(opts.scale, 0.25, 3),
+    softness: clamp(opts.softness, 0, 1),
+    silk: clamp(opts.silk, 0, 1),
+    grainAmount: clamp(opts.grainAmount, 0, 0.5),
+    grainSize: clamp(opts.grainSize, 0.5, 4),
+    grainAnimated: opts.grainAnimated,
+    contrast: clamp(opts.contrast, 0.2, 2),
+    saturation: clamp(opts.saturation, 0, 2),
+    variation: Math.max(0, opts.variation),
+    interactive: opts.interactive,
+    stir: clamp(opts.stir, 0, 2),
+    clickSwirl: opts.clickSwirl,
+    intro: opts.intro,
+    lightMode: opts.lightMode,
+    dpr: opts.dpr
+  };
+  const settingsRef = { current: settings };
+  const wakeRef = { current: null };
+
+  if (!container || !canvas) return null;
+  const gl = canvas?.getContext("webgl2", {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false
+    });
+    if (!container || !canvas || !gl) return void 0;
+    const field = link(gl, FIELD);
+    const composite = link(gl, COMPOSITE);
+    if (!field || !composite) return void 0;
+    const fu = field.uniforms;
+    const cu = composite.uniforms;
+    const vao = gl.createVertexArray();
+    const target = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, target);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const buffer = gl.createFramebuffer();
+    const fieldSize = { width: 0, height: 0 };
+    const probe = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+    const colorCache = /* @__PURE__ */ new Map();
+    const parse = (value) => {
+      const key = String(value);
+      const cached = colorCache.get(key);
+      if (cached) return cached;
+      let rgb = [0, 0, 0];
+      if (probe) {
+        probe.clearRect(0, 0, 1, 1);
+        probe.fillStyle = "#000000";
+        probe.fillStyle = key;
+        probe.fillRect(0, 0, 1, 1);
+        const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+        rgb = [r / 255, g / 255, b / 255];
+      }
+      colorCache.set(key, rgb);
+      return rgb;
+    };
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const view = { width: 1, height: 1, ratio: 1 };
+    const ramp = new Float32Array(MAX_COLORS * 3);
+    const stirs = new Float32Array(MAX_STIRS * 4);
+    const stirWeights = new Float32Array(MAX_STIRS);
+    const twirls = new Float32Array(MAX_TWIRLS * 4);
+    const trail = [];
+    const spins = [];
+    const pointer = { x: 0.5, y: 0.5, sx: 0.5, sy: 0.5, vx: 0, inside: false, fresh: true };
+    let paletteKey = "";
+    let time = 0;
+    let introClock = settingsRef.current.intro && !reduce ? 0 : 1;
+    let frameSeed = 0;
+    let grainClock = 0;
+    let raf = 0;
+    let last = 0;
+    let visible = true;
+    const syncPalette = () => {
+      const s = settingsRef.current;
+      const key = `${s.colors.join(",")}|${s.lightMode}`;
+      if (key === paletteKey) return;
+      paletteKey = key;
+      const labs = s.colors.map((color) => toLab(parse(color)));
+      if (!s.lightMode) {
+        labs.forEach((lab, i) => ramp.set(lab, i * 3));
+      } else {
+        const blank = labs.map(([L]) => Math.abs(L - labs[0][0]) < 0.1);
+        const tints = labs.filter((_, i) => !blank[i]).reverse();
+        labs.forEach((_, i) => {
+          const [L, a, b] = blank[i] ? [1, 0, 0] : tints.shift();
+          ramp.set([L + (1 - L) * LIFT, a * (1 - LIFT), b * (1 - LIFT)], i * 3);
+        });
+      }
+    };
+    const draw = () => {
+      const s = settingsRef.current;
+      const aspect = view.width / view.height;
+      syncPalette();
+      gl.bindVertexArray(vao);
+      gl.disable(gl.BLEND);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+      gl.viewport(0, 0, fieldSize.width, fieldSize.height);
+      gl.useProgram(field.program);
+      gl.uniform1f(fu.uAspect, aspect);
+      gl.uniform1f(fu.uTime, time);
+      gl.uniform3fv(fu.uRamp, ramp);
+      gl.uniform1i(fu.uCount, s.colors.length);
+      const radians = s.angle * Math.PI / 180;
+      gl.uniform1i(fu.uType, s.type);
+      gl.uniform2f(fu.uDir, Math.sin(radians), Math.cos(radians));
+      gl.uniform1f(fu.uExtent, aspect * Math.abs(Math.sin(radians)) + Math.abs(Math.cos(radians)));
+      gl.uniform1f(fu.uBands, s.bands);
+      gl.uniform1f(fu.uSoftness, s.softness);
+      gl.uniform1f(fu.uFlow, s.flow);
+      gl.uniform1f(fu.uScale, s.scale);
+      gl.uniform1f(fu.uSilk, s.silk);
+      gl.uniform4fv(fu.uStir, stirs);
+      gl.uniform1fv(fu.uStirWeight, stirWeights);
+      gl.uniform4fv(fu.uTwirl, twirls);
+      gl.uniform2f(fu.uSeed, s.variation * 3.17, s.variation * 1.91);
+      gl.uniform1f(fu.uContrast, s.contrast);
+      gl.uniform1f(fu.uSaturation, s.saturation);
+      gl.uniform1f(fu.uSettle, introClock * introClock * (3 - 2 * introClock));
+      gl.uniform1f(fu.uReveal, introClock);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.useProgram(composite.program);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, target);
+      gl.uniform1i(cu.uField, 0);
+      gl.uniform1f(cu.uGrain, s.grainAmount);
+      gl.uniform1f(cu.uGrainSize, s.grainSize * view.ratio);
+      gl.uniform1f(cu.uFrame, frameSeed);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+    const resize = () => {
+      const s = settingsRef.current;
+      view.width = Math.max(1, container.clientWidth);
+      view.height = Math.max(1, container.clientHeight);
+      view.ratio = Math.min(s.dpr || window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(view.width * view.ratio));
+      canvas.height = Math.max(1, Math.round(view.height * view.ratio));
+      const width = Math.max(1, Math.round(canvas.width / 2));
+      const height = Math.max(1, Math.round(canvas.height / 2));
+      if (width !== fieldSize.width || height !== fieldSize.height) {
+        fieldSize.width = width;
+        fieldSize.height = height;
+        gl.bindTexture(gl.TEXTURE_2D, target);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, buffer);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, target, 0);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      }
+      draw();
+      wake();
+    };
+    const updateTouches = (dt, aspect) => {
+      const s = settingsRef.current;
+      const follow = 1 - Math.exp(-dt / 0.06);
+      const px = pointer.sx;
+      const py = pointer.sy;
+      pointer.sx += (pointer.x - pointer.sx) * follow;
+      pointer.sy += (pointer.y - pointer.sy) * follow;
+      const vx = (pointer.sx - px) / dt * aspect;
+      const vy = (pointer.sy - py) / dt;
+      pointer.vx = vx;
+      const head = trail[0];
+      trail.forEach((sample) => {
+        if (sample.done) sample.age += dt;
+      });
+      if (s.interactive && pointer.inside && Math.hypot(vx, vy) > 0.02 && !reduce) {
+        if (!head || head.done) {
+          trail.unshift({ x: 0, y: 0, vx: 0, vy: 0, age: 0, grow: 0, done: false });
+          if (trail.length > MAX_STIRS) trail.pop();
+        }
+        const live = trail[0];
+        live.x = (pointer.sx - 0.5) * aspect;
+        live.y = pointer.sy - 0.5;
+        live.vx = vx;
+        live.vy = vy;
+        live.grow = Math.min(1, live.grow + dt / STIR_STEP);
+        live.done = live.grow >= 1;
+      } else if (head) {
+        head.done = true;
+      }
+      while (trail.length && trail[trail.length - 1].age > STIR_LIFE) trail.pop();
+      for (let i = 0; i < MAX_STIRS; i++) {
+        const sample = trail[i];
+        if (!sample) {
+          stirWeights[i] = 0;
+          continue;
+        }
+        const fade = 1 - sample.age / STIR_LIFE;
+        const cap = Math.min(1, 2.2 / Math.max(Math.hypot(sample.vx, sample.vy), 1e-3));
+        stirs.set([sample.x, sample.y, sample.vx * cap, sample.vy * cap], i * 4);
+        stirWeights[i] = fade * fade * sample.grow * s.stir * 0.05;
+      }
+      spins.forEach((spin) => {
+        spin.age += dt;
+      });
+      while (spins.length && spins[spins.length - 1].age > TWIRL_LIFE) spins.pop();
+      for (let i = 0; i < MAX_TWIRLS; i++) {
+        const spin = spins[i];
+        if (!spin) {
+          twirls[i * 4 + 2] = 0;
+          continue;
+        }
+        const k = spin.age / TWIRL_LIFE;
+        const envelope = Math.min(1, spin.age / 0.18) * (1 - k) * (1 - k);
+        twirls.set([spin.x, spin.y, spin.direction * 2.4 * envelope, 0.16 + 0.1 * Math.min(1, spin.age / 0.5)], i * 4);
+      }
+    };
+    const frame = (now) => {
+      raf = 0;
+      if (!visible || document.hidden) return;
+      const s = settingsRef.current;
+      const dt = last ? clamp((now - last) / 1e3, 1e-3, 0.05) : 1 / 60;
+      last = now;
+      if (!reduce) time += dt * s.speed * 0.16;
+      if (introClock < 1) introClock = Math.min(1, introClock + dt / INTRO_SECONDS);
+      grainClock += dt;
+      if (s.grainAnimated && !reduce && grainClock > 1 / 24) {
+        grainClock = 0;
+        frameSeed = (frameSeed + 1) % 97;
+      }
+      updateTouches(dt, view.width / view.height);
+      draw();
+      const busy = !reduce && (s.speed > 0 || s.grainAnimated) || introClock < 1 || trail.length > 0 || spins.length > 0;
+      if (busy) raf = requestAnimationFrame(frame);
+      else last = 0;
+    };
+    function wake() {
+      if (!raf && visible && !document.hidden) raf = requestAnimationFrame(frame);
+    }
+    const locate = (event) => {
+      const rect = container.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / Math.max(1, rect.width);
+      const y = 1 - (event.clientY - rect.top) / Math.max(1, rect.height);
+      pointer.inside = x >= 0 && x <= 1 && y >= 0 && y <= 1;
+      pointer.x = x;
+      pointer.y = y;
+      if (pointer.fresh || !pointer.inside) {
+        pointer.sx = x;
+        pointer.sy = y;
+        pointer.fresh = false;
+      }
+    };
+    const onPointerMove = (event) => {
+      locate(event);
+      if (pointer.inside || trail.length) wake();
+    };
+    const onPointerDown = (event) => {
+      locate(event);
+      const s = settingsRef.current;
+      if (!pointer.inside || !s.clickSwirl || reduce) return;
+      spins.unshift({
+        x: (pointer.x - 0.5) * (view.width / view.height),
+        y: pointer.y - 0.5,
+        age: 0,
+        direction: pointer.vx < 0 ? 1 : -1
+      });
+      if (spins.length > MAX_TWIRLS) spins.pop();
+      wake();
+    };
+    const onPointerLeave = () => {
+      pointer.inside = false;
+    };
+    const onVisibility = () => {
+      last = 0;
+      wake();
+    };
+    const resizeObserver = new ResizeObserver(resize);
+    resizeObserver.observe(container);
+    const intersection = new IntersectionObserver((entries) => {
+      visible = entries.some((entry) => entry.isIntersecting);
+      if (visible) {
+        last = 0;
+        wake();
+      }
+    });
+    intersection.observe(container);
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    document.documentElement.addEventListener("pointerleave", onPointerLeave);
+    document.addEventListener("visibilitychange", onVisibility);
+    resize();
+    wakeRef.current = wake;
+
+  return {
+    wake,
+    destroy: () => {
+      cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
+      intersection.disconnect();
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerdown", onPointerDown);
+      document.documentElement.removeEventListener("pointerleave", onPointerLeave);
+      document.removeEventListener("visibilitychange", onVisibility);
+      gl.deleteTexture(target);
+      gl.deleteFramebuffer(buffer);
+      gl.deleteVertexArray(vao);
+      gl.deleteProgram(field.program);
+      gl.deleteProgram(composite.program);
+    }
+  };
+}
+
+
+    // Initialize ReactBits Grainient WebGL2 Background
+    (function() {
+      const container = document.getElementById('grainientContainer');
+      const canvas = document.getElementById('grainientCanvas');
+      if (container && canvas) {
+        try {
+          initGrainient(container, canvas, {
+            colors: ['#050814', '#081432', '#003db3', '#0066ff', '#00d4ff'],
+            type: 'linear',
+            angle: 45,
+            bands: 1.5,
+            speed: 0.7,
+            flow: 1.0,
+            scale: 1.15,
+            softness: 0.85,
+            silk: 0.28,
+            grainAmount: 0.08,
+            grainSize: 1.3,
+            grainAnimated: true,
+            contrast: 1.05,
+            saturation: 1.18,
+            interactive: true,
+            stir: 1.0,
+            clickSwirl: true,
+            intro: true
+          });
+          console.log("ReactBits Grainient WebGL2 initialized successfully!");
+        } catch(e) {
+          console.warn("Grainient WebGL fallback to CSS background:", e);
+        }
+      }
+    })();
+
+let currentSlide = 1;
+    const totalSlides = 13;
+
+    const slides = document.querySelectorAll('.slide');
+    const slideIndicator = document.getElementById('slideIndicator');
+    const progressBar = document.getElementById('progressBar');
+    const overviewModal = document.getElementById('overviewModal');
+    const overviewGrid = document.getElementById('overviewGrid');
+
+    function getSlideFromHash() {
+      const hashMatch = window.location.hash.match(/slide-(\d+)/);
+      if (hashMatch) {
+        const n = parseInt(hashMatch[1], 10);
+        if (n >= 1 && n <= totalSlides) return n;
+      }
+      const searchMatch = window.location.search.match(/slide=(\d+)/);
+      if (searchMatch) {
+        const n = parseInt(searchMatch[1], 10);
+        if (n >= 1 && n <= totalSlides) return n;
+      }
+      return 1;
+    }
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    window.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+    window.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchEndX < touchStartX - 60) nextSlide();
+      if (touchEndX > touchStartX + 60) prevSlide();
+    }, { passive: true });
+
+    function goToSlide(n) {
+      if (n < 1) n = 1;
+      if (n > totalSlides) n = totalSlides;
+
+      slides.forEach((s, idx) => {
+        s.classList.remove('active', 'prev');
+        if (idx + 1 === n) s.classList.add('active');
+        else if (idx + 1 < n) s.classList.add('prev');
+      });
+
+      currentSlide = n;
+      slideIndicator.textContent = `${String(n).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      progressBar.style.width = `${(n / totalSlides) * 100}%`;
+      updateOverviewSelection();
+      if (n === 13 && typeof checkSolutionAuth === 'function') {
+        checkSolutionAuth();
+      }
+      try { history.replaceState(null, '', '#slide-' + n); } catch(e) {}
+    }
+
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+
+    document.getElementById('btnNext').addEventListener('click', nextSlide);
+    document.getElementById('btnPrev').addEventListener('click', prevSlide);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        if (!overviewModal.classList.contains('open')) { e.preventDefault(); nextSlide(); }
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+        if (!overviewModal.classList.contains('open')) { e.preventDefault(); prevSlide(); }
+      } else if (e.key === 'Home') { goToSlide(1); }
+      else if (e.key === 'End') { goToSlide(totalSlides); }
+      else if (e.key === 'Escape') { toggleOverview(); }
+      else if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); }
+    });
+
+    window.addEventListener('hashchange', () => {
+      const n = getSlideFromHash();
+      if (n !== currentSlide) goToSlide(n);
+    });
+
+    function toggleOverview() { overviewModal.classList.toggle('open'); }
+    document.getElementById('btnOverview').addEventListener('click', toggleOverview);
+    document.getElementById('btnCloseOverview').addEventListener('click', toggleOverview);
+
+    function buildOverview() {
+      overviewGrid.innerHTML = '';
+      slides.forEach((slide, idx) => {
+        const num = idx + 1;
+        const title = slide.querySelector('.slide-title') ? slide.querySelector('.slide-title').innerText : 'Cover Presentasi';
+        const cat = slide.getAttribute('data-cat') || 'Materi SMBD Lanjut';
+
+        const thumb = document.createElement('div');
+        thumb.className = `overview-thumb ${num === currentSlide ? 'current' : ''}`;
+        thumb.innerHTML = `
+          <div class="thumb-num">Slide ${String(num).padStart(2, '0')}</div>
+          <div class="thumb-title">${title}</div>
+          <div class="thumb-cat">${cat}</div>
+        `;
+        thumb.addEventListener('click', () => { goToSlide(num); toggleOverview(); });
+        overviewGrid.appendChild(thumb);
+      });
+    }
+
+    function updateOverviewSelection() {
+      const thumbs = document.querySelectorAll('.overview-thumb');
+      thumbs.forEach((th, idx) => {
+        if (idx + 1 === currentSlide) th.classList.add('current');
+        else th.classList.remove('current');
+      });
+    }
+
+    buildOverview();
+    goToSlide(getSlideFromHash());
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+      else if (document.exitFullscreen) document.exitFullscreen();
+    }
+    document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+
+    window.copySnippet = function(elemId) {
+      const text = document.getElementById(elemId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Kueri SQL berhasil disalin ke clipboard!');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Kueri SQL berhasil disalin ke clipboard!');
+      });
+    };
+
+    const tableData = {
+      tbProduk: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['KodeProduk', 'CHAR(4)', 'PRIMARY KEY, NOT NULL', "Kode unik barang (contoh: 'P001')"],
+          ['NamaProduk', 'VARCHAR(50)', 'NOT NULL', 'Deskripsi nama barang'],
+          ['Harga', 'INT', 'CHECK (Harga >= 0), NOT NULL', 'Harga satuan resmi produk'],
+          ['stok', 'INT', 'CHECK (stok >= 0), DEFAULT 0, NOT NULL', 'Jumlah unit persediaan fisik di toko']
+        ]
+      },
+      tbKasir: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['KodeKasir', 'CHAR(3)', 'PRIMARY KEY, NOT NULL', "Kode unik staf kasir (contoh: '001')"],
+          ['NamaKasir', 'VARCHAR(30)', 'NOT NULL', 'Nama lengkap petugas kasir'],
+          ['Pass', 'CHAR(6)', 'CHECK (CHAR_LENGTH(Pass) = 6), NOT NULL', 'Kata sandi otentikasi (tepat 6 karakter)']
+        ]
+      },
+      tbCustomer: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['KodeCus', 'CHAR(5)', 'PRIMARY KEY, NOT NULL', "ID member (contoh: 'M0001')"],
+          ['NamaCus', 'VARCHAR(50)', 'NOT NULL', 'Nama lengkap pelanggan'],
+          ['TglLahir', 'DATE', 'NOT NULL', 'Tanggal lahir untuk promo'],
+          ['JenKelCus', 'CHAR(1)', "CHECK (IN ('L','P')), NOT NULL", "Jenis kelamin: 'L' atau 'P'"],
+          ['AlmtCus', 'VARCHAR(100)', "DEFAULT 'Yogyakarta'", 'Alamat domisili customer'],
+          ['HPCus', 'VARCHAR(15)', 'NOT NULL', 'Nomor kontak handphone'],
+          ['PointTerkumpul', 'INT', 'CHECK (>= 0), DEFAULT 0', 'Akumulasi poin reward belanja']
+        ]
+      },
+      tbNota: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['Nonota', 'CHAR(10)', 'PRIMARY KEY, NOT NULL', "Nomor nota transaksi (contoh: '2208030001')"],
+          ['KodeKasir', 'CHAR(3)', 'FK ke KASIR(KodeKasir)', 'Petugas kasir yang melayani transaksi'],
+          ['TglTran', 'DATE', 'NOT NULL', 'Tanggal transaksi dilakukan'],
+          ['KodeCus', 'CHAR(5)', 'FK ke CUSTOMER(KodeCus)', 'Customer yang melakukan pembelian']
+        ]
+      },
+      tbItemNota: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['Nonota', 'CHAR(10)', 'COMPOSITE PK, FK ke NOTA', 'Nomor nota induk transaksi'],
+          ['KodeProduk', 'CHAR(4)', 'COMPOSITE PK, FK ke PRODUK', 'Kode produk barang yang dibeli'],
+          ['Banyak', 'INT', 'CHECK (Banyak >= 1), DEFAULT 1', 'Kuantitas unit barang dibeli'],
+          ['HargaJual', 'INT', 'CHECK (HargaJual >= 0)', 'Harga riil transaksi per unit']
+        ]
+      }
+    };
+
+    window.switchTableTab = function(tblKey) {
+      document.querySelectorAll('#tableTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.target) window.event.target.classList.add('active');
+
+      const data = tableData[tblKey];
+      let html = '<table class="slide-table"><thead><tr>';
+      data.cols.forEach(c => html += `<th>${c}</th>`);
+      html += '</tr></thead><tbody>';
+      data.rows.forEach(r => {
+        html += '<tr>';
+        r.forEach((cell, idx) => {
+          if (idx === 0) html += `<td><strong>${cell}</strong></td>`;
+          else if (idx === 2 && cell.includes('PRIMARY KEY')) html += `<td><span style="color:var(--accent-cyan); font-weight:600;">${cell}</span></td>`;
+          else html += `<td>${cell}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      document.getElementById('tableContainer').innerHTML = html;
+    };
+
+    const taskContent = {
+      lv1: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 1 (UDF Evaluasi Persediaan Stok):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah UDF <code style="color:#FFF;">fcCekStatusStok(kd)</code> yang mengembalikan: 'KOSONG' jika stok = 0, 'KRITIS' jika 1 s.d. 5, dan 'TERSEDIA (X Unit)' jika &gt; 5. Uji dengan kueri SELECT pada tabel produk.
+          </p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 2 (UDF Klasifikasi Member Loyal):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah UDF <code style="color:#FFF;">fcLevelLoyalitas(poin)</code> yang mengembalikan tingkat membership: 'PLATINUM' (&ge; 100), 'GOLD' (50-99), 'SILVER' (20-49), dan 'BRONZE' (&lt; 20).
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 3 (UDF Pemformatan Teks Rupiah):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah UDF <code style="color:#FFF;">fcFormatRupiah(nominal)</code> yang mengubah angka integer menjadi format string mata uang Indonesia dengan awalan 'Rp. ' dan pemisah ribuan titik (contoh: 15000 -&gt; 'Rp. 15.000').
+          </p>
+        </div>
+      `,
+      lv2: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 4 (Procedure Parameter OUT Informasi Customer):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spCariDataCustomer</code> dengan parameter IN kode customer dan 3 parameter OUT (nama, alamat, poin) untuk mengembalikan data pelanggan.
+          </p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 5 (Procedure Parameter INOUT Diskon Harga):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spTerapkanDiskonProduk</code> dengan parameter IN kodeproduk dan parameter INOUT harga. Potong harga 10%, simpan ke tabel PRODUK, dan kembalikan nilai harga baru.
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 6 (Procedure Registrasi Staf Kasir):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spTambahKasirBaru</code> yang menerima nama kasir dan password 6 karakter. Generate kode kasir 3 digit otomatis dan simpan ke tabel KASIR.
+          </p>
+        </div>
+      `,
+      lv3: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 7 (Cursor Kompilasi Riwayat Nota Belanja):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spKompilasiBelanjaMember</code> dengan CURSOR untuk mengiterasi seluruh nota belanja seorang member dan menyatukannya ke string terpisah koma.
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 8 (Cursor Pembaruan Stok Masal):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spRestokOtomatis</code> yang mencari semua produk dengan stok &lt; 10 dan secara otomatis menambahkan 50 unit ke masing-masing produk via CURSOR.
+          </p>
+        </div>
+      `,
+      lv4: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 9 (Validasi Integritas Hapus Data via SIGNAL):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spHapusCustomerAman</code>. Jika customer pernah memiliki riwayat belanja di NOTA, lempar error kustom via <code style="color:var(--accent-red);">SIGNAL SQLSTATE '45000'</code>.
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 10 (Prosedur Transaksi Atomik Penjualan):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah Stored Procedure <code style="color:#FFF;">spPencatatanItemTransaksi</code> yang memvalidasi stok di tabel PRODUK, memotong stok, dan menyimpan data ke ITEMNOTA dalam blok transaksi START TRANSACTION - COMMIT.
+          </p>
+        </div>
+      `
+    };
+
+    window.switchTaskTab = function(lvKey) {
+      document.querySelectorAll('#taskTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.target) window.event.target.classList.add('active');
+      document.getElementById('taskContainer').innerHTML = taskContent[lvKey];
+    };
+
+    const solutions = {
+      1: {
+        title: "SOLUSI SQL: SOAL 1 (fcCekStatusStok)",
+        code: `DELIMITER $$
+CREATE FUNCTION fcCekStatusStok(p_kodeproduk CHAR(4))
+RETURNS VARCHAR(30)
+DETERMINISTIC
+READS SQL DATA
+BEGIN
+    DECLARE v_stok INT;
+    DECLARE v_status VARCHAR(30);
+    SELECT stok INTO v_stok FROM produk WHERE kodeproduk = p_kodeproduk;
+    IF v_stok IS NULL THEN SET v_status = 'PRODUK TIDAK ADA';
+    ELSEIF v_stok = 0 THEN SET v_status = 'KOSONG';
+    ELSEIF v_stok <= 5 THEN SET v_status = 'KRITIS';
+    ELSE SET v_status = CONCAT('TERSEDIA (', v_stok, ' Unit)');
+    END IF;
+    RETURN v_status;
+END$$
+DELIMITER ;
+
+-- Pengujian:
+SELECT kodeproduk, namaproduk, stok, fcCekStatusStok(kodeproduk) AS status_stok FROM produk;`,
+        analysis: "Fungsi membaca data stok dari tabel produk dan mengevaluasi ambang batas unit menggunakan percabangan IF-ELSEIF."
+      },
+      2: {
+        title: "SOLUSI SQL: SOAL 2 (fcLevelLoyalitas)",
+        code: `DELIMITER $$
+CREATE FUNCTION fcLevelLoyalitas(p_point INT)
+RETURNS VARCHAR(15)
+DETERMINISTIC
+NO SQL
+BEGIN
+    DECLARE v_level VARCHAR(15);
+    IF p_point >= 100 THEN SET v_level = 'PLATINUM';
+    ELSEIF p_point >= 50 THEN SET v_level = 'GOLD';
+    ELSEIF p_point >= 20 THEN SET v_level = 'SILVER';
+    ELSE SET v_level = 'BRONZE';
+    END IF;
+    RETURN v_level;
+END$$
+DELIMITER ;
+
+-- Pengujian:
+SELECT kodecus, namacus, pointterkumpul, fcLevelLoyalitas(pointterkumpul) AS tier FROM customer;`,
+        analysis: "Murni kalkulasi skalar berbasis parameter tanpa akses tabel, dideklarasikan dengan karakteristik NO SQL."
+      },
+      3: {
+        title: "SOLUSI SQL: SOAL 3 (fcFormatRupiah)",
+        code: `DELIMITER $$
+CREATE FUNCTION fcFormatRupiah(p_nominal INT)
+RETURNS VARCHAR(30)
+DETERMINISTIC
+NO SQL
+BEGIN
+    RETURN CONCAT('Rp. ', REPLACE(FORMAT(p_nominal, 0), ',', '.'));
+END$$
+DELIMITER ;
+
+-- Pengujian:
+SELECT kodeproduk, namaproduk, fcFormatRupiah(harga) AS harga_rupiah FROM produk;`,
+        analysis: "Menggabungkan FORMAT() dan REPLACE() untuk menghasilkan format angka pemisah ribuan khas rupiah."
+      },
+      4: {
+        title: "SOLUSI SQL: SOAL 4 (spCariDataCustomer)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spCariDataCustomer(
+    IN p_kodecus CHAR(5),
+    OUT p_nama VARCHAR(50),
+    OUT p_alamat VARCHAR(100),
+    OUT p_poin INT
+)
+BEGIN
+    SELECT namacus, almtcus, pointterkumpul 
+    INTO p_nama, p_alamat, p_poin
+    FROM customer WHERE kodecus = p_kodecus;
+END$$
+DELIMITER ;
+
+-- Pengujian:
+CALL spCariDataCustomer('M0001', @nama, @alamat, @poin);
+SELECT @nama, @alamat, @poin;`,
+        analysis: "Menggunakan SELECT INTO untuk menyalin nilai kolom langsung ke dalam 3 variabel parameter OUT."
+      },
+      5: {
+        title: "SOLUSI SQL: SOAL 5 (spTerapkanDiskonProduk)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spTerapkanDiskonProduk(
+    IN p_kodeproduk CHAR(4),
+    INOUT p_harga INT
+)
+BEGIN
+    SET p_harga = ROUND(p_harga * 0.90);
+    UPDATE produk SET harga = p_harga WHERE kodeproduk = p_kodeproduk;
+END$$
+DELIMITER ;
+
+-- Pengujian:
+SET @hrg = 10000;
+CALL spTerapkanDiskonProduk('P001', @hrg);
+SELECT @hrg AS harga_diskon;`,
+        analysis: "Parameter INOUT membawa harga awal, dipotong 10% di procedure, dan mengembalikan harga hasil diskon."
+      },
+      6: {
+        title: "SOLUSI SQL: SOAL 6 (spTambahKasirBaru)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spTambahKasirBaru(
+    IN p_nama VARCHAR(50),
+    IN p_pass CHAR(6)
+)
+BEGIN
+    DECLARE last_code INT DEFAULT 0;
+    DECLARE new_kode CHAR(3);
+    IF CHAR_LENGTH(p_pass) <> 6 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Password kasir harus tepat 6 karakter.';
+    END IF;
+    SELECT IFNULL(MAX(CAST(kodekasir AS UNSIGNED)), 0) INTO last_code FROM kasir;
+    SET new_kode = LPAD(last_code + 1, 3, '0');
+    INSERT INTO kasir VALUES (new_kode, p_nama, p_pass);
+    SELECT * FROM kasir WHERE kodekasir = new_kode;
+END$$
+DELIMITER ;`,
+        analysis: "Validasi integritas panjang password kasir (6 karakter) dan auto-numbering kode kasir 3 digit."
+      },
+      7: {
+        title: "SOLUSI SQL: SOAL 7 (spKompilasiBelanjaMember)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spKompilasiBelanjaMember(IN p_kodecus CHAR(5))
+BEGIN
+    DECLARE v_nota CHAR(10);
+    DECLARE v_done INT DEFAULT 0;
+    DECLARE v_daftar VARCHAR(1000) DEFAULT '';
+    DECLARE curNota CURSOR FOR SELECT nonota FROM nota WHERE kodecus = p_kodecus;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
+    
+    OPEN curNota;
+    readLoop: LOOP
+        FETCH curNota INTO v_nota;
+        IF v_done = 1 THEN LEAVE readLoop; END IF;
+        IF v_daftar = '' THEN SET v_daftar = v_nota;
+        ELSE SET v_daftar = CONCAT(v_daftar, ', ', v_nota); END IF;
+    END LOOP readLoop;
+    CLOSE curNota;
+    SELECT p_kodecus AS Member, IFNULL(NULLIF(v_daftar, ''), 'Belum Pernah Belanja') AS Riwayat_Nota;
+END$$
+DELIMITER ;`,
+        analysis: "Cursor membaca seluruh nomor nota milik customer bersangkutan dan menyatukannya ke satu string panjang."
+      },
+      8: {
+        title: "SOLUSI SQL: SOAL 8 (spRestokOtomatis)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spRestokOtomatis(OUT p_total INT)
+BEGIN
+    DECLARE v_kd CHAR(4);
+    DECLARE v_done INT DEFAULT 0;
+    DECLARE v_count INT DEFAULT 0;
+    DECLARE curKritis CURSOR FOR SELECT kodeproduk FROM produk WHERE stok < 10;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_done = 1;
+    
+    OPEN curKritis;
+    restokLoop: LOOP
+        FETCH curKritis INTO v_kd;
+        IF v_done = 1 THEN LEAVE restokLoop; END IF;
+        UPDATE produk SET stok = stok + 50 WHERE kodeproduk = v_kd;
+        SET v_count = v_count + 1;
+    END LOOP restokLoop;
+    CLOSE curKritis;
+    SET p_total = v_count;
+END$$
+DELIMITER ;`,
+        analysis: "Batch processing dengan cursor untuk memperbarui persediaan seluruh produk bersaldo stok kritis."
+      },
+      9: {
+        title: "SOLUSI SQL: SOAL 9 (spHapusCustomerAman)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spHapusCustomerAman(IN p_kodecus CHAR(5))
+BEGIN
+    DECLARE v_jml INT DEFAULT 0;
+    SELECT COUNT(*) INTO v_jml FROM nota WHERE kodecus = p_kodecus;
+    IF v_jml > 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Tidak dapat menghapus customer: Data customer terikat dengan riwayat nota!';
+    ELSE
+        DELETE FROM customer WHERE kodecus = p_kodecus;
+        SELECT CONCAT('Customer ', p_kodecus, ' berhasil dihapus.') AS status;
+    END IF;
+END$$
+DELIMITER ;`,
+        analysis: "Mencegah foreign key constraint error dengan melempar error kustom yang deskriptif via SIGNAL SQLSTATE '45000'."
+      },
+      10: {
+        title: "SOLUSI SQL: SOAL 10 (spPencatatanItemTransaksi)",
+        code: `DELIMITER $$
+CREATE PROCEDURE spPencatatanItemTransaksi(
+    IN p_nonota CHAR(10), IN p_kodeproduk CHAR(4), IN p_qty INT
+)
+BEGIN
+    DECLARE v_stok INT DEFAULT 0; DECLARE v_hrg INT DEFAULT 0;
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION BEGIN ROLLBACK; RESIGNAL; END;
+    
+    SELECT stok, harga INTO v_stok, v_hrg FROM produk WHERE kodeproduk = p_kodeproduk;
+    IF v_stok IS NULL THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Produk tidak ditemukan'; END IF;
+    IF v_stok < p_qty THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stok fisik toko kurang'; END IF;
+    
+    START TRANSACTION;
+        INSERT INTO itemnota VALUES (p_nonota, p_kodeproduk, p_qty, v_hrg);
+        UPDATE produk SET stok = stok - p_qty WHERE kodeproduk = p_kodeproduk;
+    COMMIT;
+    SELECT 'Item nota berhasil dicatat.' AS status;
+END$$
+DELIMITER ;`,
+        analysis: "Blok transaksi atomik dengan jaminan pembatalan mutasi (ROLLBACK) jika terjadi kegagalan eksepsi."
+      }
+    };
+
+    window.loadSolution = function(num) {
+      document.querySelectorAll('#solutionTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.target) window.event.target.classList.add('active');
+
+      const sol = solutions[num];
+      document.getElementById('solutionTitle').textContent = sol.title;
+      document.getElementById('solCodeContent').textContent = sol.code;
+      document.getElementById('solAnalysis').innerHTML = sol.analysis;
+    };
+
+    // OTENTIKASI KUNCI JAWABAN ASPRAK & DOSEN
+    const VALID_PASSCODES = ['asprak2026', 'smbdl2026', 'uny001', 'admin'];
+
+    function isSolutionAuthenticated() {
+      return sessionStorage.getItem('asprak_auth') === 'true';
+    }
+
+    function checkSolutionAuth() {
+      const gate = document.getElementById('solutionAuthGate');
+      const content = document.getElementById('solutionContent');
+      const badge = document.getElementById('solutionAuthStatusBadge');
+      const desc = document.getElementById('solutionDesc');
+      const passInput = document.getElementById('asprakPassInput');
+
+      if (!gate || !content) return;
+
+      if (isSolutionAuthenticated()) {
+        gate.style.display = 'none';
+        content.style.display = 'flex';
+        if (badge) badge.innerHTML = 'Slide 13 / 13 <span style="color:var(--accent-cyan); font-weight:700; margin-left:8px; display:inline-flex; align-items:center; gap:4px;"><i class="ph-bold ph-lock-key-open"></i> [Terbuka]</span>';
+        if (desc) desc.textContent = 'Pilihlah nomor soal untuk melihat kueri SQL baku, kueri pengujian, dan analisis logika teknisnya:';
+      } else {
+        gate.style.display = 'flex';
+        content.style.display = 'none';
+        if (badge) badge.innerHTML = 'Slide 13 / 13 <span style="color:#F87171; font-weight:700; margin-left:8px; display:inline-flex; align-items:center; gap:4px;"><i class="ph-bold ph-lock-key"></i> [Terkunci]</span>';
+        if (desc) desc.textContent = 'Halaman ini dilindungi otentikasi agar mahasiswa dapat menyelesaikan latihan secara mandiri.';
+        if (passInput && currentSlide === 13) {
+          setTimeout(() => passInput.focus(), 250);
+        }
+      }
+    }
+
+    window.unlockSolutions = function() {
+      const input = document.getElementById('asprakPassInput');
+      const errBox = document.getElementById('authErrorMessage');
+      if (!input) return;
+      const val = (input.value || '').trim().toLowerCase();
+
+      if (VALID_PASSCODES.includes(val)) {
+        sessionStorage.setItem('asprak_auth', 'true');
+        if (errBox) errBox.style.display = 'none';
+        input.value = '';
+        checkSolutionAuth();
+      } else {
+        input.classList.add('shake');
+        if (errBox) {
+          errBox.innerHTML = '<span style="display:inline-flex; align-items:center; gap:5px;"><i class="ph-bold ph-warning-circle"></i> Sandi otorisasi salah. Akses ditolak.</span>';
+          errBox.style.display = 'block';
+        }
+        setTimeout(() => input.classList.remove('shake'), 450);
+      }
+    };
+
+    window.lockSolutions = function() {
+      sessionStorage.removeItem('asprak_auth');
+      checkSolutionAuth();
+    };
+
+    const passInputElem = document.getElementById('asprakPassInput');
+    if (passInputElem) {
+      passInputElem.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') unlockSolutions();
+      });
+    }
+
+    // Panggil saat script selesai di-load
+    checkSolutionAuth();
+  
+    const fullSqlScript = "-- ==============================================================================\n-- SKRIP BASIS DATA MINIMARKET (STUDI KASUS KELOMPOK 7 / AMIKOM)\n-- Normalisasi 3NF: KASIR, CUSTOMER, PRODUK, NOTA, ITEMNOTA\n-- Sumber: rancangan database.xlsx & 20261009140239_SI167_Diskusi_Kelompok.docx\n-- RDBMS: MySQL 8.0+ / MariaDB 10.5+ (Engine InnoDB)\n-- ==============================================================================\n\nCREATE DATABASE IF NOT EXISTS minimarket_db\n  CHARACTER SET utf8mb4\n  COLLATE utf8mb4_unicode_ci;\n\nUSE minimarket_db;\n\n-- ------------------------------------------------------------------------------\n-- 1. HAPUS TABEL LAMA JIKA SUDAH ADA (URUTAN CHILD KE PARENT)\n-- ------------------------------------------------------------------------------\nDROP TABLE IF EXISTS itemnota;\nDROP TABLE IF EXISTS nota;\nDROP TABLE IF EXISTS produk;\nDROP TABLE IF EXISTS customer;\nDROP TABLE IF EXISTS kasir;\n\n-- ------------------------------------------------------------------------------\n-- 2. PEMBUATAN TABEL INDUK (PARENT TABLES)\n-- ------------------------------------------------------------------------------\n\n-- Tabel KASIR (Data Petugas Kasir Minimarket)\nCREATE TABLE kasir (\n    KodeKasir   CHAR(3)         NOT NULL,\n    NamaKasir   VARCHAR(30)     NOT NULL,\n    Pass        CHAR(6)         NOT NULL,\n    PRIMARY KEY (KodeKasir),\n    CONSTRAINT chk_kasir_pass CHECK (CHAR_LENGTH(Pass) = 6)\n) ENGINE=InnoDB;\n\n-- Tabel CUSTOMER (Data Anggota / Pembeli Umum)\n-- Catatan: Customer UMUM (M0000) bernilai NULL pada data pribadi\nCREATE TABLE customer (\n    KodeCus         CHAR(5)         NOT NULL,\n    NamaCus         VARCHAR(50)     NOT NULL,\n    TglLahir        DATE            NULL,\n    JenKelCus       CHAR(1)         NULL,\n    AlmtCus         VARCHAR(100)    NULL DEFAULT 'Yogyakarta',\n    HPCus           VARCHAR(15)     NULL,\n    PointTerkumpul  INT             NOT NULL DEFAULT 0,\n    PRIMARY KEY (KodeCus),\n    CONSTRAINT chk_customer_jenkel CHECK (JenKelCus IN ('L', 'P') OR JenKelCus IS NULL),\n    CONSTRAINT chk_customer_point  CHECK (PointTerkumpul >= 0)\n) ENGINE=InnoDB;\n\n-- Tabel PRODUK (Data Barang Dagangan Toko)\nCREATE TABLE produk (\n    KodeProduk  CHAR(4)         NOT NULL,\n    NamaProduk  VARCHAR(50)     NOT NULL,\n    Harga       INT             NOT NULL,\n    stok        INT             NOT NULL DEFAULT 0,\n    PRIMARY KEY (KodeProduk),\n    CONSTRAINT chk_produk_harga CHECK (Harga >= 0),\n    CONSTRAINT chk_produk_stok  CHECK (stok >= 0)\n) ENGINE=InnoDB;\n\n-- ------------------------------------------------------------------------------\n-- 3. PEMBUATAN TABEL TRANSAKSI (CHILD TABLES)\n-- ------------------------------------------------------------------------------\n\n-- Tabel NOTA (Header Transaksi Penjualan)\n-- Nonota format: YYMMDDxxxx (contoh: '2208030001')\nCREATE TABLE nota (\n    Nonota      CHAR(10)        NOT NULL,\n    KodeKasir   CHAR(3)         NOT NULL,\n    TglTran     DATE            NOT NULL,\n    KodeCus     CHAR(5)         NOT NULL,\n    PRIMARY KEY (Nonota),\n    CONSTRAINT fk_nota_kasir\n        FOREIGN KEY (KodeKasir) REFERENCES kasir(KodeKasir)\n        ON UPDATE CASCADE ON DELETE RESTRICT,\n    CONSTRAINT fk_nota_customer\n        FOREIGN KEY (KodeCus) REFERENCES customer(KodeCus)\n        ON UPDATE CASCADE ON DELETE RESTRICT\n) ENGINE=InnoDB;\n\n-- Tabel ITEMNOTA (Detail Item Barang yang Dibeli pada Nota)\n-- Relasi Many-to-Many antara NOTA dan PRODUK dipecah di tabel ini\nCREATE TABLE itemnota (\n    Nonota      CHAR(10)        NOT NULL,\n    KodeProduk  CHAR(4)         NOT NULL,\n    banyak      INT             NOT NULL DEFAULT 1,\n    hargajual   INT             NOT NULL,\n    PRIMARY KEY (Nonota, KodeProduk),\n    CONSTRAINT chk_itemnota_banyak CHECK (banyak >= 1),\n    CONSTRAINT chk_itemnota_harga  CHECK (hargajual >= 0),\n    CONSTRAINT fk_itemnota_nota\n        FOREIGN KEY (Nonota) REFERENCES nota(Nonota)\n        ON UPDATE CASCADE ON DELETE CASCADE,\n    CONSTRAINT fk_itemnota_produk\n        FOREIGN KEY (KodeProduk) REFERENCES produk(KodeProduk)\n        ON UPDATE CASCADE ON DELETE RESTRICT\n) ENGINE=InnoDB;\n\n-- ------------------------------------------------------------------------------\n-- 4. INSERT DATA AWAL (SEED DATA BASED ON DISKUSI KELOMPOK 7 & EXCEL 3NF)\n-- ------------------------------------------------------------------------------\n\n-- Data KASIR\nINSERT INTO kasir (KodeKasir, NamaKasir, Pass) VALUES\n('001', 'Unyil', 'uny001'),\n('002', 'Melani', 'mel002');\n\n-- Data CUSTOMER\nINSERT INTO customer (KodeCus, NamaCus, TglLahir, JenKelCus, AlmtCus, HPCus, PointTerkumpul) VALUES\n('M0000', 'UMUM', NULL, NULL, 'Yogyakarta', NULL, 0),\n('M0001', 'Indah', '1990-12-12', 'P', 'Jl. Wijaya 255', '08162992', 25),\n('M0002', 'Budi', '1987-05-20', 'L', 'Jl. Mawar 19', '081239927', 10);\n\n-- Data PRODUK\nINSERT INTO produk (KodeProduk, NamaProduk, Harga, stok) VALUES\n('P001', 'Indomie Goreng Special', 2100, 100),\n('P002', 'Wafer Tango', 4300, 50),\n('P003', 'SariRoti Coklat Keju', 7500, 30);\n\n-- Data NOTA\nINSERT INTO nota (Nonota, KodeKasir, TglTran, KodeCus) VALUES\n('2208030001', '001', '2022-08-03', 'M0001'),\n('2208030002', '001', '2022-08-03', 'M0002'),\n('2208040001', '002', '2022-08-04', 'M0000'),\n('2208050001', '002', '2022-08-05', 'M0001');\n\n-- Data ITEMNOTA\nINSERT INTO itemnota (Nonota, KodeProduk, banyak, hargajual) VALUES\n('2208030001', 'P001', 5, 2100),\n('2208030001', 'P002', 1, 4300),\n('2208030002', 'P003', 2, 7500),\n('2208040001', 'P001', 3, 2100),\n('2208040001', 'P002', 3, 4300),\n('2208040001', 'P003', 1, 7500),\n('2208050001', 'P002', 2, 4300);\n\n-- ------------------------------------------------------------------------------\n-- 5. VERIFIKASI PEMBENTUKAN DATA\n-- ------------------------------------------------------------------------------\nSELECT 'Tabel KASIR:' AS info;\nSELECT * FROM kasir;\n\nSELECT 'Tabel CUSTOMER:' AS info;\nSELECT * FROM customer;\n\nSELECT 'Tabel PRODUK:' AS info;\nSELECT * FROM produk;\n\nSELECT 'Tabel NOTA:' AS info;\nSELECT * FROM nota;\n\nSELECT 'Tabel ITEMNOTA:' AS info;\nSELECT * FROM itemnota;\n";
+
+    window.downloadSqlFile = function() {
+      const blob = new Blob([fullSqlScript], { type: 'application/sql' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'minimarket_db.sql';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    window.copyFullSqlScript = function() {
+      navigator.clipboard.writeText(fullSqlScript).then(() => {
+        alert('Skrip SQL minimarket_db.sql lengkap (DDL & DML) berhasil disalin ke clipboard!');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = fullSqlScript;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Skrip SQL minimarket_db.sql lengkap (DDL & DML) berhasil disalin ke clipboard!');
+      });
+    };
+
+  </script>
+</body>
+</html>

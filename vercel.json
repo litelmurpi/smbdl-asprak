@@ -3,7 +3,6 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/", "destination": "/index.html" },
     { "source": "/procedure", "destination": "/slide_procedure_function.html" },
     { "source": "/routine", "destination": "/slide_procedure_function.html" },
     { "source": "/view", "destination": "/slide_view.html" },
