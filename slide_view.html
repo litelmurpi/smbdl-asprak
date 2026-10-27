@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database View & Studi Kasus Kasir Minimarket | SMBD Lanjut</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ---------------- DESIGN TOKENS (ANTI-SLOP & TASTESKILL V2) ---------------- */
+    :root {
+      --bg-canvas: #050814;
+      --bg-surface: #0C1326;
+      --bg-card: #0F172E;
+      --bg-card-subtle: #141E38;
+      --border-subtle: rgba(255, 255, 255, 0.12);
+      --border-accent: rgba(0, 229, 255, 0.4);
+      --text-heading: #FFFFFF;
+      --text-body: #CBD5E1;
+      --text-muted: #8492A6;
+      --accent-cyan: #00E5FF;
+      --accent-blue: #2563EB;
+      --accent-indigo: #6366F1;
+      --accent-green: #10B981;
+      --accent-red: #F43F5E;
+      --code-bg: #070B18;
+      --code-border: #1E293B;
+      --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+      --slide-width: 1200px;
+      --slide-height: 675px; /* 16:9 Aspect Ratio */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-body);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------------- HEADER BAR ---------------- */
+    header.deck-header {
+      height: 52px;
+      background-color: rgba(5, 8, 20, 0.9);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+      position: relative;
+    }
+
+    .brand-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.08);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .brand-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-heading);
+    }
+
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-body);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .ctrl-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-body);
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .ctrl-btn:hover {
+      background: var(--bg-card-subtle);
+      color: #FFF;
+      border-color: var(--accent-cyan);
+    }
+
+    .ctrl-btn:focus-visible {
+      outline: 2px solid var(--accent-cyan);
+      outline-offset: 1px;
+    }
+
+    /* ---------------- PROGRESS BAR ---------------- */
+    .progress-bar-container {
+      height: 3px;
+      background: rgba(255, 255, 255, 0.05);
+      width: 100%;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--accent-cyan);
+      width: 8.33%; /* 1 of 12 */
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ---------------- PRESENTATION DECK STAGE ---------------- */
+    main.deck-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 16px;
+    }
+
+    .slide-frame {
+      width: var(--slide-width);
+      height: var(--slide-height);
+      position: relative;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---------------- SLIDE ENGINE ---------------- */
+    .slides-wrapper {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 40px 48px 36px 48px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: translate3d(24px, 0, 0);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), 
+                  visibility 0.35s;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translate3d(0, 0, 0);
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    .slide.prev {
+      transform: translate3d(-24px, 0, 0);
+    }
+
+    /* ---------------- SLIDE HEADER & LABELS ---------------- */
+    .slide-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .slide-category {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .slide-submeta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slide-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-heading);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .slide-description {
+      font-size: 14.5px;
+      color: var(--text-body);
+      line-height: 1.5;
+      margin-bottom: 20px;
+      max-width: 900px;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ---------------- FOOTER IN SLIDE ---------------- */
+    .slide-footer-row {
+      margin-top: auto;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* ---------------- BENTO & CARD ARCHITECTURES ---------------- */
+    .card-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: 100%;
+    }
+
+    .card-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      height: 100%;
+    }
+
+    .card-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      height: 100%;
+    }
+
+    .tech-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .tech-card.highlight {
+      border-color: var(--border-accent);
+      background: linear-gradient(180deg, rgba(0, 229, 255, 0.06) 0%, var(--bg-card) 100%);
+    }
+
+    .tech-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tech-card-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .tech-card-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-heading);
+    }
+
+    .tech-card-p {
+      font-size: 13px;
+      color: var(--text-body);
+      line-height: 1.5;
+    }
+
+    /* ---------------- CODE BLOCK STYLING ---------------- */
+    .code-box {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .code-box-header {
+      background: #090E1F;
+      border-bottom: 1px solid var(--code-border);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .code-copy-btn {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-body);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .code-copy-btn:hover {
+      background: rgba(0, 229, 255, 0.1);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    .code-content {
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: #93C5FD;
+      line-height: 1.55;
+      overflow-y: auto;
+      flex: 1;
+      white-space: pre;
+    }
+
+    .kw { color: #38BDF8; font-weight: 600; }
+    .fn { color: #A78BFA; }
+    .str { color: #34D399; }
+    .cm { color: #64748B; font-style: italic; }
+    .tbl { color: #FCD34D; }
+
+    /* ---------------- TABLES IN SLIDES ---------------- */
+    .slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      text-align: left;
+    }
+
+    .slide-table th {
+      background: #111A35;
+      color: #FFF;
+      font-weight: 600;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .slide-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-body);
+    }
+
+    .slide-table tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* ---------------- INTERACTIVE TABS & BUTTONS ---------------- */
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--bg-card-subtle);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+
+    /* ---------------- OVERVIEW GRID MODAL (ESC) ---------------- */
+    .overview-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 7, 17, 0.94);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 30px 48px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s;
+    }
+
+    .overview-modal.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .overview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .overview-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      overflow-y: auto;
+      padding-bottom: 24px;
+    }
+
+    .overview-thumb {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+      height: 120px;
+    }
+
+    .overview-thumb:hover, .overview-thumb.current {
+      border-color: var(--accent-cyan);
+      transform: translateY(-2px);
+      background: #111B38;
+    }
+
+    .thumb-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent-cyan);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .thumb-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      color: #FFF;
+      line-height: 1.35;
+    }
+
+    .thumb-cat {
+      margin-top: auto;
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    /* ---------------- ERROR BANNER (CHECK OPTION) ---------------- */
+    .error-box {
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      border-left: 4px solid var(--accent-red);
+      border-radius: 4px;
+      padding: 12px 16px;
+      margin-top: 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #FECDD3;
+    }
+
+    /* ---------------- RESPONSIVE SCALE ---------------- */
+    @media (max-width: 1280px) {
+      :root {
+        --slide-width: 95vw;
+        --slide-height: 53.43vw;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP DECK HEADER -->
+  <header class="deck-header">
+    <div class="brand-meta">
+      <span class="brand-tag">SMBD LANJUT</span>
+      <span class="brand-title">Materi Pengayaan & Studi Kasus: Database View</span>
+    </div>
+
+    <div class="deck-controls">
+      <span class="slide-counter" id="slideIndicator">01 / 12</span>
+      <button class="ctrl-btn" id="btnPrev" title="Slide Sebelumnya (Panah Kiri)">◀ Prev</button>
+      <button class="ctrl-btn" id="btnNext" title="Slide Berikutnya (Panah Kanan / Spasi)">Next ▶</button>
+      <button class="ctrl-btn" id="btnOverview" title="Galeri Seluruh Slide (Esc)">Grid</button>
+      <button class="ctrl-btn" id="btnFullscreen" title="Layar Penuh (F)">Fullscreen</button>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </header>
+
+  <!-- PRESENTATION MAIN STAGE -->
+  <main class="deck-stage">
+    <div class="slide-frame">
+      <div class="slides-wrapper" id="slidesWrapper">
+
+        <!-- ==================== SLIDE 01: HERO COVER ==================== -->
+        <section class="slide active" data-slide="1" data-cat="MODUL PENGAYAAN">
+          <div class="slide-label-row">
+            <span class="slide-category">SISTEM INFORMASI 2024/2025 · SMBD LANJUT</span>
+            <span class="slide-submeta">Universitas Amikom Yogyakarta</span>
+          </div>
+
+          <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 860px;">
+            <h1 style="font-family: var(--font-display); font-size: 40px; font-weight: 800; color: #FFF; line-height: 1.15; letter-spacing: -0.03em; margin-bottom: 16px;">
+              Implementasi & Pembahasan Mendalam <span style="color: var(--accent-cyan);">Database View</span>
+            </h1>
+            <p style="font-size: 16.5px; color: var(--text-body); line-height: 1.6; margin-bottom: 28px;">
+              Kajian komprehensif arsitektur tabel virtual, Updatable Views, integritas transaksi dengan WITH CHECK OPTION, algoritma MERGE vs TEMPTABLE, serta implementasi studi kasus transaksi kasir minimarket 3NF (Diskusi Kelompok 7).
+            </p>
+
+            <div style="display: flex; gap: 12px; margin-bottom: 36px;">
+              <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 10px 16px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Materi Praktikum</div>
+                <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">Pengayaan Praktikum 3</div>
+              </div>
+              <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 10px 16px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Studi Kasus Ritel</div>
+                <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">5 Tabel Fisik Normalisasi 3NF</div>
+              </div>
+              <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 10px 16px; border-radius: 6px;">
+                <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Tantangan Tugas</div>
+                <div style="font-size: 13.5px; font-weight: 600; color: #FFF;">10 Soal Bertingkat + Kunci Solusi</div>
+              </div>
+            </div>
+
+            <div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">
+              Tekan <kbd style="background: #18223E; padding: 2px 6px; border-radius: 3px; color: var(--accent-cyan);">Space</kbd> atau <kbd style="background: #18223E; padding: 2px 6px; border-radius: 3px; color: var(--accent-cyan);">→</kbd> untuk membuka slide berikutnya · <kbd style="background: #18223E; padding: 2px 6px; border-radius: 3px; color: var(--accent-cyan);">Esc</kbd> untuk galeri
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Laboratorium Sistem Informasi · Pengayaan SMBD Lanjut</span>
+            <span>Slide 01 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 02: ARSITEKTUR VIEW ==================== -->
+        <section class="slide" data-slide="2" data-cat="ARSITEKTUR BASIS DATA">
+          <div class="slide-label-row">
+            <span class="slide-category">01 · KONSEP & ARSITEKTUR</span>
+            <span class="slide-submeta">Tabel Virtual vs Tabel Fisik</span>
+          </div>
+          <h2 class="slide-title">Apa itu Database View?</h2>
+          <p class="slide-description">
+            View adalah tabel virtual (logical table) yang didasarkan pada hasil kueri SQL. View tidak menyimpan rekaman data fisik tersendiri di disk, melainkan menyimpan definisi kueri di kamus data (data dictionary).
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- Left Panel: Conceptual -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">PRINSIP</span>
+                <span class="tech-card-title">Mekanisme Kerja Virtualisasi</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 12px;">
+                Saat aplikasi mengeksekusi <code style="color: var(--accent-cyan);">SELECT * FROM nama_view</code>, MySQL Query Engine secara dinamis menjalankan kueri pembentuknya ke tabel-tabel fisik dasar di bawahnya.
+              </p>
+              <ul style="font-size: 12.5px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
+                <li><strong>Nol Redundansi Penyimpanan:</strong> Menghemat media penyimpanan fisik disk.</li>
+                <li><strong>Dynamic Result Set:</strong> Selalu merefleksikan perubahan terkini dari tabel fisik dasar secara langsung.</li>
+                <li><strong>Interface Transparan:</strong> Pengguna berinteraksi dengan View persis seperti tabel fisik biasa.</li>
+              </ul>
+            </div>
+
+            <!-- Right Panel: Isometric Diagram -->
+            <div class="tech-card highlight" style="align-items: center; justify-content: center; padding: 12px;">
+              <svg width="500" height="260" viewBox="0 0 500 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Top Layer: Client Application -->
+                <g transform="translate(100, 12)">
+                  <polygon points="150,0 300,36 150,72 0,36" fill="#1E293B" stroke="#00E5FF" stroke-width="2" />
+                  <text x="150" y="32" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-weight="700" text-anchor="middle">APLIKASI KLIEN / POS KASIR</text>
+                  <text x="150" y="50" fill="#00E5FF" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="middle">SELECT * FROM vw_KatalogDisplay</text>
+                </g>
+
+                <!-- Connecting Flow Down -->
+                <path d="M250,88 L250,104" stroke="#00E5FF" stroke-width="2" stroke-dasharray="4 4" />
+
+                <!-- Middle Layer: Virtual View Layer -->
+                <g transform="translate(100, 92)">
+                  <polygon points="150,0 300,36 150,72 0,36" fill="rgba(16, 185, 129, 0.18)" stroke="#10B981" stroke-width="2" />
+                  <text x="150" y="32" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-weight="700" text-anchor="middle">VIRTUAL VIEW LAYER (LOGIS)</text>
+                  <text x="150" y="50" fill="#10B981" font-family="'JetBrains Mono', monospace" font-size="10" text-anchor="middle">Schema Catalog · SQL Query Engine</text>
+                </g>
+
+                <!-- Connecting Flow Down -->
+                <path d="M250,168 L250,184" stroke="#2563EB" stroke-width="2" stroke-dasharray="4 4" />
+
+                <!-- Bottom Layer: Base Physical Tables -->
+                <g transform="translate(100, 172)">
+                  <polygon points="150,0 300,36 150,72 0,36" fill="#0D152D" stroke="#3B82F6" stroke-width="2" />
+                  <text x="150" y="32" fill="#FFFFFF" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-weight="700" text-anchor="middle">TABEL FISIK 3NF (STORAGE DISK)</text>
+                  <text x="150" y="50" fill="#93C5FD" font-family="'JetBrains Mono', monospace" font-size="9.5" text-anchor="middle">PRODUK · KASIR · CUSTOMER · NOTA · ITEMNOTA</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 1: Konsep Dasar & Arsitektur Database View</span>
+            <span>Slide 02 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 03: 4 ALASAN STRATEGIS ==================== -->
+        <section class="slide" data-slide="3" data-cat="MANFAAT VIEW">
+          <div class="slide-label-row">
+            <span class="slide-category">02 · MANFAAT & TUJUAN</span>
+            <span class="slide-submeta">Nilai Bisnis & Rekayasa Perangkat Lunak</span>
+          </div>
+          <h2 class="slide-title">4 Alasan Strategis Menggunakan View</h2>
+          <p class="slide-description">
+            Penerapan View dalam sistem basis data perusahaan bukan sekadar alternatif sintaks, melainkan pilar penting keamanan, konsistensi data, dan arsitektur modular:
+          </p>
+
+          <div class="card-grid-4" style="flex: 1;">
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">01</span>
+                <span class="tech-card-title">Keamanan & Masking</span>
+              </div>
+              <p class="tech-card-p">
+                Menyembunyikan baris atau kolom sensitif (seperti kolom password kasir atau kontak pribadi customer) tanpa memodifikasi struktur tabel fisik aslinya.
+              </p>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">02</span>
+                <span class="tech-card-title">Simplifikasi Kueri</span>
+              </div>
+              <p class="tech-card-p">
+                Kueri kompleks yang menggabungkan 5 tabel (INNER JOIN), filter tanggal, dan kalkulasi subtotal dibungkus rapi sehingga pemrogram klien cukup memanggil 1 kueri simpel.
+              </p>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">03</span>
+                <span class="tech-card-title">Konsistensi Rumus</span>
+              </div>
+              <p class="tech-card-p">
+                Menjamin rumus bisnis terpusat (contoh: <code style="color:var(--accent-cyan)">banyak * hargajual</code>). Mencegah disparitas formula antarmuka di berbagai aplikasi kasir / backend.
+              </p>
+            </div>
+
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">04</span>
+                <span class="tech-card-title">Independensi Data</span>
+              </div>
+              <p class="tech-card-p">
+                Jika tabel fisik dipecah atau dinormalisasi ulang di masa depan, antarmuka kolom View dapat dipertahankan agar kode program klien tidak mengalami kerusakan (*breaking changes*).
+              </p>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 1.1: Keuntungan dan Tujuan Implementasi View</span>
+            <span>Slide 03 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 04: SINTAKS CREATE VIEW ==================== -->
+        <section class="slide" data-slide="4" data-cat="SINTAKS & DDL">
+          <div class="slide-label-row">
+            <span class="slide-category">03 · SINTAKS DEKLARASI</span>
+            <span class="slide-submeta">MySQL 8.0 Reference Standard</span>
+          </div>
+          <h2 class="slide-title">Anatomi Sintaks CREATE VIEW di MySQL</h2>
+          <p class="slide-description">
+            MySQL menyediakan kontrol deklaratif penuh mulai dari algoritma eksekusi, pemilik hak akses (definer/invoker), hingga proteksi integritas:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- Left: Formal Syntax -->
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>FORMAL SINTAKS DDL</span>
+                <button class="code-copy-btn" onclick="copySnippet('codeSyntax')">Copy</button>
+              </div>
+              <div class="code-content" id="codeSyntax"><span class="kw">CREATE</span> [<span class="kw">OR REPLACE</span>]
+    [<span class="kw">ALGORITHM</span> = {<span class="str">UNDEFINED</span> | <span class="str">MERGE</span> | <span class="str">TEMPTABLE</span>}]
+    [<span class="kw">DEFINER</span> = user]
+    [<span class="kw">SQL SECURITY</span> { <span class="str">DEFINER</span> | <span class="str">INVOKER</span> }]
+    <span class="kw">VIEW</span> view_name [(column_list)]
+    <span class="kw">AS</span> select_statement
+    [<span class="kw">WITH</span> [<span class="str">CASCADED</span> | <span class="str">LOCAL</span>] <span class="kw">CHECK OPTION</span>];</div>
+            </div>
+
+            <!-- Right: Real Example & Explanation -->
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>CONTOH KASUS: VIEW KATALOG HARGA</span>
+                <button class="code-copy-btn" onclick="copySnippet('codeExample1')">Copy</button>
+              </div>
+              <div class="code-content" id="codeExample1"><span class="cm">-- Membuat view display produk aktif</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> vw_KatalogAktif <span class="kw">AS</span>
+<span class="kw">SELECT</span> 
+    kodeproduk <span class="kw">AS</span> kode,
+    <span class="fn">UPPER</span>(namaproduk) <span class="kw">AS</span> produk,
+    harga,
+    stok
+<span class="kw">FROM</span> <span class="tbl">produk</span>
+<span class="kw">WHERE</span> stok &gt; 0;
+
+<span class="cm">-- Memanggil data dari view</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> vw_KatalogAktif 
+<span class="kw">ORDER BY</span> harga <span class="kw">DESC</span>;</div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 2: Sintaks Lengkap & Manajemen View di MySQL</span>
+            <span>Slide 04 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 05: SIMPLE VS COMPLEX VIEW ==================== -->
+        <section class="slide" data-slide="5" data-cat="KLASIFIKASI">
+          <div class="slide-label-row">
+            <span class="slide-category">04 · KLASIFIKASI TEKNIS</span>
+            <span class="slide-submeta">Simple View vs Complex View</span>
+          </div>
+          <h2 class="slide-title">Klasifikasi: Simple View vs Complex View</h2>
+          <p class="slide-description">
+            Pemahaman perbedaan mendasar antara kedua jenis View ini menentukan apakah data pada tabel fisik dapat diperbarui secara langsung melalui View tersebut:
+          </p>
+
+          <div style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden;">
+            <table class="slide-table">
+              <thead>
+                <tr>
+                  <th style="width: 25%;">Parameter Pembanding</th>
+                  <th style="width: 37%;">Simple View</th>
+                  <th style="width: 38%;">Complex View</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Tabel Sumber Data</strong></td>
+                  <td>Hanya berasal dari 1 tabel fisik dasar (single table).</td>
+                  <td>Menggabungkan 2 tabel fisik atau lebih melalui relasi <code style="color:var(--accent-cyan)">JOIN</code>.</td>
+                </tr>
+                <tr>
+                  <td><strong>Fungsi Agregasi</strong></td>
+                  <td>Tidak mengandung fungsi agregat (SUM, AVG, COUNT, MIN, MAX).</td>
+                  <td>Sering menggunakan fungsi kalkulasi agregasi dan statistika.</td>
+                </tr>
+                <tr>
+                  <td><strong>Pengelompokan Baris</strong></td>
+                  <td>Tidak menggunakan klausul <code style="color:var(--accent-cyan)">GROUP BY</code> atau <code style="color:var(--accent-cyan)">HAVING</code>.</td>
+                  <td>Menggunakan <code style="color:var(--accent-cyan)">GROUP BY</code> dan filter <code style="color:var(--accent-cyan)">HAVING</code> untuk ringkasan.</td>
+                </tr>
+                <tr>
+                  <td><strong>Penyaringan Duplikasi</strong></td>
+                  <td>Tidak menggunakan klausa <code style="color:var(--accent-cyan)">DISTINCT</code>.</td>
+                  <td>Bisa menggunakan <code style="color:var(--accent-cyan)">DISTINCT</code> atau operator <code style="color:var(--accent-cyan)">UNION</code>.</td>
+                </tr>
+                <tr>
+                  <td><strong>Pemetaan Kolom</strong></td>
+                  <td>Setiap kolom memetakan 1-ke-1 langsung ke kolom tabel fisik.</td>
+                  <td>Mengandung ekspresi kalkulasi (contoh: <code style="color:var(--accent-cyan)">banyak * hargajual</code>).</td>
+                </tr>
+                <tr>
+                  <td><strong>Kemampuan DML</strong></td>
+                  <td><span style="color: var(--accent-green); font-weight: 700;">Updatable</span> (Dapat di-INSERT, UPDATE, DELETE).</td>
+                  <td><span style="color: var(--accent-red); font-weight: 700;">Read-Only</span> (Sebagian besar hanya dapat dibaca).</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 3: Klasifikasi View: Simple View vs Complex View</span>
+            <span>Slide 05 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 06: UPDATABLE VIEWS ==================== -->
+        <section class="slide" data-slide="6" data-cat="MANIPULASI DATA">
+          <div class="slide-label-row">
+            <span class="slide-category">05 · DML PADA VIEW</span>
+            <span class="slide-submeta">Aturan Deterministik MySQL</span>
+          </div>
+          <h2 class="slide-title">Syarat Mutlak Updatable Views di MySQL</h2>
+          <p class="slide-description">
+            MySQL mengizinkan operasi DML (INSERT, UPDATE, DELETE) pada View jika baris View memiliki korespondensi 1-ke-1 yang jelas dengan baris fisik di bawahnya:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- Left: 8 Rules -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">ATURAN</span>
+                <span class="tech-card-title">Kriteria Larangan DML (Non-Updatable)</span>
+              </div>
+              <ul style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
+                <li>Tidak mengandung fungsi agregat: <code style="color:var(--accent-cyan)">SUM, COUNT, AVG, MIN, MAX</code>.</li>
+                <li>Tidak menggunakan klausa <code style="color:var(--accent-cyan)">DISTINCT</code> atau <code style="color:var(--accent-cyan)">UNION</code>.</li>
+                <li>Tidak mengandung <code style="color:var(--accent-cyan)">GROUP BY</code> atau <code style="color:var(--accent-cyan)">HAVING</code>.</li>
+                <li>Kolom yang dimodifikasi bukan kolom hasil ekspresi kalkulasi aritmatika.</li>
+                <li>Tidak terdapat subquery di dalam SELECT-list atau klausa FROM target.</li>
+                <li>Algoritma harus <code style="color:var(--accent-cyan)">MERGE</code> (bukan TEMPTABLE).</li>
+                <li>Untuk operasi INSERT: Semua kolom NOT NULL tanpa default value pada tabel fisik wajib disertakan pada definisi View.</li>
+              </ul>
+            </div>
+
+            <!-- Right: Code Example & Verification -->
+            <div class="code-box">
+              <div class="code-box-header">
+                <span>CONTOH: UPDATE STOK VIA VIEW</span>
+                <button class="code-copy-btn" onclick="copySnippet('codeUpdatable')">Copy</button>
+              </div>
+              <div class="code-content" id="codeUpdatable"><span class="cm">-- 1. View Updatable untuk Staf Gudang</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> vw_UpdateStokGudang <span class="kw">AS</span>
+<span class="kw">SELECT</span> kodeproduk, namaproduk, stok
+<span class="kw">FROM</span> <span class="tbl">produk</span>;
+
+<span class="cm">-- 2. Melakukan UPDATE stok melalui View</span>
+<span class="kw">UPDATE</span> vw_UpdateStokGudang
+<span class="kw">SET</span> stok = 25
+<span class="kw">WHERE</span> kodeproduk = <span class="str">'P001'</span>;
+
+<span class="cm">-- 3. Verifikasi: Data pada tabel fisik PRODUK ikut berubah!</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tbl">produk</span> <span class="kw">WHERE</span> kodeproduk = <span class="str">'P001'</span>;</div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 4: Updatable Views (Memperbarui Data Melalui View)</span>
+            <span>Slide 06 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 07: WITH CHECK OPTION ==================== -->
+        <section class="slide" data-slide="7" data-cat="INTEGRITAS DATA">
+          <div class="slide-label-row">
+            <span class="slide-category">06 · KONTROL INTEGRITAS</span>
+            <span class="slide-submeta">Mencegah Anomali Phantom Update</span>
+          </div>
+          <h2 class="slide-title">Proteksi Integritas: WITH CHECK OPTION</h2>
+          <p class="slide-description">
+            Tanpa klausa pelindung, pengguna dapat memasukkan data yang melanggar filter WHERE. Data berhasil masuk ke tabel dasar, namun langsung "hilang" dari tampilan View:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- Left: Phantom Problem -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">ANOMALI</span>
+                <span class="tech-card-title">Masalah Tanpa CHECK OPTION</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Jika sebuah View dibuat dengan syarat <code style="color:var(--accent-cyan)">WHERE harga >= 5000</code> tanpa klausul CHECK OPTION:
+              </p>
+              <div style="background: rgba(0,0,0,0.3); border-radius: 4px; padding: 10px; font-family: var(--font-mono); font-size: 11.5px; color: #CBD5E1; margin-bottom: 10px;">
+                UPDATE vw_ProdukMahal SET harga = 2000 WHERE kodeproduk = 'P004';
+              </div>
+              <p class="tech-card-p" style="font-size: 12px; color: #FCA5A5;">
+                ⚠ Kueri berhasil! Namun harga P004 sekarang 2000, sehingga produk tersebut seketika hilang dari hasil SELECT view tersebut.
+              </p>
+            </div>
+
+            <!-- Right: Solution with Error 1369 -->
+            <div class="tech-card highlight">
+              <div class="tech-card-header">
+                <span class="tech-card-num" style="background: rgba(16,185,129,0.15); color: var(--accent-green);">SOLUSI</span>
+                <span class="tech-card-title">Penyematan WITH CHECK OPTION</span>
+              </div>
+              <div class="code-content" style="padding: 10px; font-size: 11.5px;"><span class="kw">CREATE OR REPLACE VIEW</span> vw_ProdukPremium <span class="kw">AS</span>
+<span class="kw">SELECT</span> kodeproduk, namaproduk, harga, stok
+<span class="kw">FROM</span> <span class="tbl">produk</span>
+<span class="kw">WHERE</span> harga &gt;= 5000
+<span class="kw">WITH CHECK OPTION</span>;</div>
+
+              <div class="error-box">
+                <strong>Simulasi Respon Database:</strong><br>
+                ERROR 1369 (HY000): CHECK OPTION failed 'minimarket.vw_ProdukPremium'
+              </div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 5: Klausa WITH CHECK OPTION & Integritas Data</span>
+            <span>Slide 07 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 08: LOCAL VS CASCADED ==================== -->
+        <section class="slide" data-slide="8" data-cat="EVALUASI HIERARKI">
+          <div class="slide-label-row">
+            <span class="slide-category">07 · HIERARKI BERTINGKAT</span>
+            <span class="slide-submeta">Perilaku Validasi pada Nested Views</span>
+          </div>
+          <h2 class="slide-title">Evaluasi Hierarki: LOCAL vs CASCADED</h2>
+          <p class="slide-description">
+            Ketika sebuah View dibuat di atas View lain (View on top of View), MySQL menyediakan dua cakupan pengujian integritas kondisi klausa WHERE:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- LOCAL Card -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">OPSI 1</span>
+                <span class="tech-card-title">WITH LOCAL CHECK OPTION</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Hanya memvalidasi kondisi WHERE dari View itu sendiri. Kondisi View di bawahnya HANYA diuji jika View di bawahnya tersebut secara eksplisit memiliki klausa CHECK OPTION.
+              </p>
+              <div style="background: rgba(0,0,0,0.3); border-radius: 4px; padding: 10px; font-size: 12px; line-height: 1.5;">
+                <strong style="color:var(--accent-green);">Eksperimen Kasus:</strong> Mengubah alamat customer Yogyakarta menjadi 'Sleman' melalui View Anak berstatus LOCAL: <strong>BERHASIL</strong> (karena View Induk tidak memiliki check option).
+              </div>
+            </div>
+
+            <!-- CASCADED Card -->
+            <div class="tech-card highlight">
+              <div class="tech-card-header">
+                <span class="tech-card-num" style="background: rgba(0,229,255,0.15); color: var(--accent-cyan);">OPSI 2 (DEFAULT)</span>
+                <span class="tech-card-title">WITH CASCADED CHECK OPTION</span>
+              </div>
+              <p class="tech-card-p" style="margin-bottom: 10px;">
+                Menguji kondisi WHERE dirinya DAN seluruh rantai View di bawahnya secara rekursif, meskipun View di bawahnya TIDAK mendeklarasikan check option.
+              </p>
+              <div style="background: rgba(0,0,0,0.3); border-radius: 4px; padding: 10px; font-size: 12px; line-height: 1.5;">
+                <strong style="color:var(--accent-red);">Eksperimen Kasus:</strong> Mengubah alamat menjadi 'Sleman' melalui View Anak berstatus CASCADED: <strong>DITOLAK (Error 1369)</strong> karena melanggar syarat View Induk.
+              </div>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 5.3: Analisis Komparasi: LOCAL vs CASCADED CHECK OPTION</span>
+            <span>Slide 08 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 09: ALGORITMA & SECURITY ==================== -->
+        <section class="slide" data-slide="9" data-cat="ENGINE & SECURITY">
+          <div class="slide-label-row">
+            <span class="slide-category">08 · INTERNAL ENGINE</span>
+            <span class="slide-submeta">Optimasi Eksekusi & Hak Akses Pengguna</span>
+          </div>
+          <h2 class="slide-title">Algoritma Pemrosesan & Hak Akses Keamanan</h2>
+          <p class="slide-description">
+            Mengontrol bagaimana database engine mengeksekusi kueri View secara internal serta hak akses kredensial mana yang digunakan:
+          </p>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- Left: Algorithms -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">ALGORITHM</span>
+                <span class="tech-card-title">Strategi Query Optimizer</span>
+              </div>
+              <ul style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
+                <li>
+                  <strong style="color:#FFF;">MERGE:</strong> Kueri pemanggil digabungkan langsung dengan kueri definisi View. Indeks tabel fisik dapat dimanfaatkan penuh dan mendukung Updatable View.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">TEMPTABLE:</strong> Hasil View dimaterialisasi ke tabel sementara di memori/disk terlebih dahulu. Indeks tabel fisik tidak terbawa, lebih lambat, dan selalu Read-Only.
+                </li>
+                <li>
+                  <strong style="color:#FFF;">UNDEFINED (Default):</strong> Optimizer otomatis memilih MERGE bila memungkinkan, atau beralih ke TEMPTABLE jika ada agregasi/GROUP BY.
+                </li>
+              </ul>
+            </div>
+
+            <!-- Right: SQL Security -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">SECURITY</span>
+                <span class="tech-card-title">Konteks Otorisasi (DEFINER vs INVOKER)</span>
+              </div>
+              <ul style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
+                <li>
+                  <strong style="color:var(--accent-cyan);">SQL SECURITY DEFINER (Default):</strong> View dieksekusi dengan izin akun pembuat/definer. Pengguna pemanggil hanya butuh izin SELECT pada View tanpa perlu akses ke tabel fisik. Sangat aman untuk menyembunyikan tabel master kasir.
+                </li>
+                <li>
+                  <strong style="color:var(--text-heading);">SQL SECURITY INVOKER:</strong> View dieksekusi dengan izin akun pengguna yang sedang login. Pengguna wajib memiliki izin SELECT pada View DAN seluruh tabel fisik terkait.
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 6 & 7: Algoritma Pemrosesan & Keamanan View di MySQL</span>
+            <span>Slide 09 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 10: STUDI KASUS MINIMARKET ==================== -->
+        <section class="slide" data-slide="10" data-cat="STUDI KASUS">
+          <div class="slide-label-row">
+            <span class="slide-category">09 · STUDI KASUS 3NF</span>
+            <span class="slide-submeta">Sistem Penjualan Kasir Minimarket (Kelompok 7)</span>
+          </div>
+          <h2 class="slide-title">Skema 5 Tabel Relasional Minimarket</h2>
+          <p class="slide-description">
+            Studi kasus diadaptasi dari hasil normalisasi 3NF pada Diskusi Kelompok 7, mencatat aktivitas penjualan barang di toko ritel:
+          </p>
+
+          <div class="tab-bar" id="tableTabBar">
+            <button class="tab-btn active" onclick="switchTableTab('tbProduk')">PRODUK</button>
+            <button class="tab-btn" onclick="switchTableTab('tbKasir')">KASIR</button>
+            <button class="tab-btn" onclick="switchTableTab('tbCustomer')">CUSTOMER</button>
+            <button class="tab-btn" onclick="switchTableTab('tbNota')">NOTA</button>
+            <button class="tab-btn" onclick="switchTableTab('tbItemNota')">ITEMNOTA</button>
+          </div>
+
+          <div style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; overflow: hidden; padding: 12px;">
+            <div id="tableContainer">
+              <!-- Default: PRODUK -->
+              <table class="slide-table">
+                <thead>
+                  <tr>
+                    <th>Nama Kolom</th>
+                    <th>Tipe Data</th>
+                    <th>Batasan Integritas (Constraint)</th>
+                    <th>Keterangan / Fungsi Bisnis</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>KodeProduk</strong></td>
+                    <td>CHAR(4)</td>
+                    <td><span style="color:var(--accent-cyan);">PRIMARY KEY</span>, NOT NULL</td>
+                    <td>Kode unik barang dagangan (contoh: 'P001')</td>
+                  </tr>
+                  <tr>
+                    <td><strong>NamaProduk</strong></td>
+                    <td>VARCHAR(50)</td>
+                    <td>NOT NULL</td>
+                    <td>Deskripsi nama barang</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Harga</strong></td>
+                    <td>INT</td>
+                    <td>CHECK (Harga &gt;= 0), NOT NULL</td>
+                    <td>Harga satuan resmi produk</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Stok</strong></td>
+                    <td>INT</td>
+                    <td>CHECK (Stok &gt;= 0), DEFAULT 0, NOT NULL</td>
+                    <td>Jumlah unit persediaan barang di toko</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 9: Studi Kasus Sistem Basis Data Transaksi Minimarket</span>
+            <span>Slide 10 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 11: LEMBAR TUGAS ==================== -->
+        <section class="slide" data-slide="11" data-cat="LATIHAN MAHASISWA">
+          <div class="slide-label-row">
+            <span class="slide-category">10 · TUGAS PRAKTIKUM</span>
+            <span class="slide-submeta">10 Soal Skenario Mandiri Bertingkat</span>
+          </div>
+          <h2 class="slide-title">Lembar Tantangan Praktikum Mahasiswa</h2>
+          <p class="slide-description">
+            Pilihlah tingkatan tantangan untuk melihat skenario tugas yang dirancang bersih dari jawaban bagi praktikan:
+          </p>
+
+          <div class="tab-bar" id="taskTabBar">
+            <button class="tab-btn active" onclick="switchTaskTab('lv1')">Tingkat 1: Masking</button>
+            <button class="tab-btn" onclick="switchTaskTab('lv2')">Tingkat 2: Analitik Agregasi</button>
+            <button class="tab-btn" onclick="switchTaskTab('lv3')">Tingkat 3: Updatable View</button>
+            <button class="tab-btn" onclick="switchTaskTab('lv4')">Tingkat 4: CHECK OPTION</button>
+          </div>
+
+          <div style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 18px 20px; overflow-y: auto;" id="taskContainer">
+            <div style="margin-bottom: 14px;">
+              <strong style="color:var(--accent-cyan);">Soal 1 (Katalog Display & Evaluasi Stok):</strong>
+              <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+                Buatlah View <code style="color:#FFF;">vw_KatalogProdukAktif</code> yang menampilkan Kode Produk, Nama Produk (huruf kapital), Harga, Stok, dan kolom evaluasi <code style="color:#FFF;">Status Stok</code> ('Stok Habis' jika 0, 'Stok Kritis' jika &lt; 10, 'Stok Aman' selain itu).
+              </p>
+            </div>
+            <div style="margin-bottom: 14px;">
+              <strong style="color:var(--accent-cyan);">Soal 2 (Masking Kredensial Kasir):</strong>
+              <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+                Buatlah View <code style="color:#FFF;">vw_ProfilKasirPublik</code> yang menampilkan Kode Kasir, Nama Kasir, dan kolom audit <code style="color:#FFF;">Status Kredensial</code> ('Memenuhi Standar Keamanan' jika panjang pass = 6 karakter). Kolom password fisik <code style="color:#FFF;">Pass</code> wajib disembunyikan.
+              </p>
+            </div>
+            <div>
+              <strong style="color:var(--accent-cyan);">Soal 3 (Sensor Privasi Kontak Member):</strong>
+              <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+                Buatlah View <code style="color:#FFF;">vw_MemberYogyakarta</code> untuk customer berdomisili Yogyakarta, dengan kolom jenis kelamin lengkap ('Laki-laki' / 'Perempuan') dan 4 digit terakhir nomor HP disensor menjadi 'XXXX'.
+              </p>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 10: Lembar Tugas & Latihan Soal Praktikum Mahasiswa</span>
+            <span>Slide 11 / 12</span>
+          </div>
+        </section>
+
+        <!-- ==================== SLIDE 12: KUNCI JAWABAN ==================== -->
+        <section class="slide" data-slide="12" data-cat="PANDUAN ASPRAK">
+          <div class="slide-label-row">
+            <span class="slide-category">11 · KUNCI SOLUSI</span>
+            <span class="slide-submeta">Pedoman Khusus Dosen & Asisten Praktikum</span>
+          </div>
+          <h2 class="slide-title">Kunci Jawaban & Analisis Teknis</h2>
+          <p class="slide-description">
+            Pilihlah nomor soal untuk melihat kueri SQL DDL/DML solusi baku dan analisis logis database engine:
+          </p>
+
+          <div class="tab-bar" id="solutionTabBar" style="flex-wrap: wrap;">
+            <button class="tab-btn active" onclick="loadSolution(1)">Soal 1</button>
+            <button class="tab-btn" onclick="loadSolution(2)">Soal 2</button>
+            <button class="tab-btn" onclick="loadSolution(4)">Soal 4</button>
+            <button class="tab-btn" onclick="loadSolution(5)">Soal 5</button>
+            <button class="tab-btn" onclick="loadSolution(6)">Soal 6</button>
+            <button class="tab-btn" onclick="loadSolution(7)">Soal 7</button>
+            <button class="tab-btn" onclick="loadSolution(9)">Soal 9</button>
+            <button class="tab-btn" onclick="loadSolution(10)">Soal 10</button>
+          </div>
+
+          <div class="card-grid-2" style="flex: 1;">
+            <!-- Left: Solution Code -->
+            <div class="code-box">
+              <div class="code-box-header">
+                <span id="solutionTitle">SOLUSI SQL: SOAL 1</span>
+                <button class="code-copy-btn" onclick="copySnippet('solCodeContent')">Copy SQL</button>
+              </div>
+              <div class="code-content" id="solCodeContent">CREATE OR REPLACE VIEW vw_KatalogProdukAktif AS
+SELECT 
+    kodeproduk,
+    UPPER(namaproduk) AS nama_produk_kapital,
+    harga,
+    stok,
+    CASE 
+        WHEN stok = 0 THEN 'Stok Habis'
+        WHEN stok &lt; 10 THEN 'Stok Kritis'
+        ELSE 'Stok Aman'
+    END AS status_stok
+FROM produk;
+
+-- Kueri Pengujian:
+SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;</div>
+            </div>
+
+            <!-- Right: Technical Logic Explanation -->
+            <div class="tech-card">
+              <div class="tech-card-header">
+                <span class="tech-card-num">ANALISIS</span>
+                <span class="tech-card-title">Penjelasan Logika & Output</span>
+              </div>
+              <p class="tech-card-p" id="solAnalysis" style="line-height: 1.6;">
+                Kueri memanfaatkan fungsi bawaan <code style="color:var(--accent-cyan)">UPPER()</code> untuk standarisasi huruf kapital dan struktur kendali <code style="color:var(--accent-cyan)">CASE-WHEN</code> untuk mengevaluasi ambang batas unit stok. View ini bersifat read-only untuk kolom kalkulasi status_stok, namun jika dialgoritmakan MERGE, kolom harga dan stok tabel dasar tetap dapat diakses.
+              </p>
+            </div>
+          </div>
+
+          <div class="slide-footer-row">
+            <span>Bab 11: Lampiran Kunci Jawaban & Pembahasan Lengkap</span>
+            <span>Slide 12 / 12</span>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- OVERVIEW / GRID MODAL (ESC) -->
+  <div class="overview-modal" id="overviewModal">
+    <div class="overview-header">
+      <div class="overview-title">Galeri Slide Presentasi (12 Slides)</div>
+      <button class="ctrl-btn" id="btnCloseOverview">Tutup (Esc)</button>
+    </div>
+    <div class="overview-grid" id="overviewGrid">
+      <!-- Generated by JavaScript -->
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT SLIDE ENGINE -->
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 12;
+
+    const slides = document.querySelectorAll('.slide');
+    const slideIndicator = document.getElementById('slideIndicator');
+    const progressBar = document.getElementById('progressBar');
+    const overviewModal = document.getElementById('overviewModal');
+    const overviewGrid = document.getElementById('overviewGrid');
+
+    // Hash helper
+    function getSlideFromHash() {
+      const match = window.location.hash.match(/slide-(\d+)/);
+      if (match) {
+        const n = parseInt(match[1], 10);
+        if (n >= 1 && n <= totalSlides) return n;
+      }
+      return 1;
+    }
+
+    // Touch Swipe Support
+    let touchStartX = 0;
+    let touchEndX = 0;
+    window.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    window.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchEndX < touchStartX - 60) nextSlide();
+      if (touchEndX > touchStartX + 60) prevSlide();
+    }, { passive: true });
+
+    // Update Slide View
+    function goToSlide(n) {
+      if (n < 1) n = 1;
+      if (n > totalSlides) n = totalSlides;
+
+      slides.forEach((s, idx) => {
+        s.classList.remove('active', 'prev');
+        if (idx + 1 === n) {
+          s.classList.add('active');
+        } else if (idx + 1 < n) {
+          s.classList.add('prev');
+        }
+      });
+
+      currentSlide = n;
+      slideIndicator.textContent = `${String(n).padStart(2, '0')} / ${String(totalSlides).padStart(2, '0')}`;
+      progressBar.style.width = `${(n / totalSlides) * 100}%`;
+      updateOverviewSelection();
+      try {
+        history.replaceState(null, '', '#slide-' + n);
+      } catch(e) {}
+    }
+
+    window.addEventListener('hashchange', () => {
+      const n = getSlideFromHash();
+      if (n !== currentSlide) goToSlide(n);
+    });
+
+    function nextSlide() { goToSlide(currentSlide + 1); }
+    function prevSlide() { goToSlide(currentSlide - 1); }
+
+    // Navigation buttons
+    document.getElementById('btnNext').addEventListener('click', nextSlide);
+    document.getElementById('btnPrev').addEventListener('click', prevSlide);
+
+    // Keyboard events
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        if (!overviewModal.classList.contains('open')) {
+          e.preventDefault();
+          nextSlide();
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'Backspace' || e.key === 'PageUp') {
+        if (!overviewModal.classList.contains('open')) {
+          e.preventDefault();
+          prevSlide();
+        }
+      } else if (e.key === 'Home') {
+        goToSlide(1);
+      } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+      } else if (e.key === 'Escape') {
+        toggleOverview();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    // Overview Grid
+    function toggleOverview() {
+      overviewModal.classList.toggle('open');
+    }
+
+    document.getElementById('btnOverview').addEventListener('click', toggleOverview);
+    document.getElementById('btnCloseOverview').addEventListener('click', toggleOverview);
+
+    // Build overview thumbnails
+    function buildOverview() {
+      overviewGrid.innerHTML = '';
+      slides.forEach((slide, idx) => {
+        const num = idx + 1;
+        const title = slide.querySelector('.slide-title') ? slide.querySelector('.slide-title').innerText : 'Cover Presentasi';
+        const cat = slide.getAttribute('data-cat') || 'Materi SMBD Lanjut';
+
+        const thumb = document.createElement('div');
+        thumb.className = `overview-thumb ${num === currentSlide ? 'current' : ''}`;
+        thumb.innerHTML = `
+          <div class="thumb-num">Slide ${String(num).padStart(2, '0')}</div>
+          <div class="thumb-title">${title}</div>
+          <div class="thumb-cat">${cat}</div>
+        `;
+        thumb.addEventListener('click', () => {
+          goToSlide(num);
+          toggleOverview();
+        });
+        overviewGrid.appendChild(thumb);
+      });
+    }
+
+    function updateOverviewSelection() {
+      const thumbs = document.querySelectorAll('.overview-thumb');
+      thumbs.forEach((th, idx) => {
+        if (idx + 1 === currentSlide) {
+          th.classList.add('current');
+        } else {
+          th.classList.remove('current');
+        }
+      });
+    }
+
+    buildOverview();
+    goToSlide(getSlideFromHash());
+
+    // Fullscreen Mode
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+    document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+
+    // Copy Snippet Utility
+    window.copySnippet = function(elemId) {
+      const text = document.getElementById(elemId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Kueri SQL berhasil disalin ke clipboard!');
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('Kueri SQL berhasil disalin ke clipboard!');
+      });
+    };
+
+    // Table Data Tabs in Slide 10
+    const tableData = {
+      tbProduk: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['KodeProduk', 'CHAR(4)', 'PRIMARY KEY, NOT NULL', "Kode unik barang (contoh: 'P001')"],
+          ['NamaProduk', 'VARCHAR(50)', 'NOT NULL', 'Deskripsi nama barang'],
+          ['Harga', 'INT', 'CHECK (Harga >= 0), NOT NULL', 'Harga satuan resmi produk'],
+          ['Stok', 'INT', 'CHECK (Stok >= 0), DEFAULT 0', 'Jumlah unit persediaan di toko']
+        ]
+      },
+      tbKasir: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['KodeKasir', 'CHAR(3)', 'PRIMARY KEY, NOT NULL', "Kode unik staf kasir (contoh: '001')"],
+          ['NamaKasir', 'VARCHAR(50)', 'NOT NULL', 'Nama lengkap petugas kasir'],
+          ['Pass', 'CHAR(6)', 'CHECK (CHAR_LENGTH=6), NOT NULL', 'Kata sandi otentikasi (tepat 6 karakter)']
+        ]
+      },
+      tbCustomer: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['KodeCus', 'CHAR(5)', 'PRIMARY KEY, NOT NULL', "ID member (contoh: 'M0001')"],
+          ['NamaCus', 'VARCHAR(50)', 'NOT NULL', 'Nama lengkap pelanggan'],
+          ['TglLahir', 'DATE', 'NOT NULL', 'Tanggal lahir untuk promo'],
+          ['JenKelCus', 'CHAR(1)', "CHECK (IN ('L','P')), NOT NULL", "Jenis kelamin: 'L' atau 'P'"],
+          ['AlmtCus', 'VARCHAR(100)', "DEFAULT 'Yogyakarta'", 'Alamat domisili customer'],
+          ['HPCus', 'VARCHAR(15)', 'NOT NULL', 'Nomor kontak handphone'],
+          ['PointTerkumpul', 'INT', 'CHECK (>= 0), DEFAULT 0', 'Akumulasi poin reward belanja']
+        ]
+      },
+      tbNota: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['Nonota', 'CHAR(10)', 'PRIMARY KEY, NOT NULL', "Nomor nota transaksi (contoh: '2208030001')"],
+          ['KodeKasir', 'CHAR(3)', 'FK ke KASIR(KodeKasir)', 'Petugas kasir yang melayani transaksi'],
+          ['TglTran', 'DATE', 'NOT NULL', 'Tanggal transaksi dilakukan'],
+          ['KodeCus', 'CHAR(5)', 'FK ke CUSTOMER(KodeCus)', 'Customer yang melakukan pembelian']
+        ]
+      },
+      tbItemNota: {
+        cols: ['Nama Kolom', 'Tipe Data', 'Batasan Integritas', 'Fungsi Bisnis'],
+        rows: [
+          ['Nonota', 'CHAR(10)', 'COMPOSITE PK, FK ke NOTA', 'Nomor nota induk transaksi'],
+          ['KodeProduk', 'CHAR(4)', 'COMPOSITE PK, FK ke PRODUK', 'Kode produk barang yang dibeli'],
+          ['Banyak', 'INT', 'CHECK (Banyak >= 1), DEFAULT 1', 'Kuantitas unit barang dibeli'],
+          ['HargaJual', 'INT', 'CHECK (HargaJual >= 0)', 'Harga riil transaksi per unit']
+        ]
+      }
+    };
+
+    window.switchTableTab = function(tblKey) {
+      document.querySelectorAll('#tableTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.target) window.event.target.classList.add('active');
+
+      const data = tableData[tblKey];
+      let html = '<table class="slide-table"><thead><tr>';
+      data.cols.forEach(c => html += `<th>${c}</th>`);
+      html += '</tr></thead><tbody>';
+      data.rows.forEach(r => {
+        html += '<tr>';
+        r.forEach((cell, idx) => {
+          if (idx === 0) html += `<td><strong>${cell}</strong></td>`;
+          else if (idx === 2 && cell.includes('PRIMARY KEY')) html += `<td><span style="color:var(--accent-cyan); font-weight:600;">${cell}</span></td>`;
+          else html += `<td>${cell}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+      document.getElementById('tableContainer').innerHTML = html;
+    };
+
+    // Task Tab Selector in Slide 11
+    const taskContent = {
+      lv1: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 1 (Katalog Display & Evaluasi Stok):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah View <code style="color:#FFF;">vw_KatalogProdukAktif</code> yang menampilkan Kode Produk, Nama Produk (huruf kapital), Harga, Stok, dan kolom evaluasi <code style="color:#FFF;">Status Stok</code> ('Stok Habis' jika 0, 'Stok Kritis' jika &lt; 10, 'Stok Aman' selain itu).
+          </p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 2 (Masking Kredensial Kasir):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah View <code style="color:#FFF;">vw_ProfilKasirPublik</code> yang menampilkan Kode Kasir, Nama Kasir, dan kolom audit <code style="color:#FFF;">Status Kredensial</code> ('Memenuhi Standar Keamanan' jika panjang pass = 6 karakter). Kolom password fisik <code style="color:#FFF;">Pass</code> wajib disembunyikan.
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 3 (Sensor Privasi Kontak Member):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah View <code style="color:#FFF;">vw_MemberYogyakarta</code> untuk customer berdomisili Yogyakarta, dengan kolom jenis kelamin lengkap ('Laki-laki' / 'Perempuan') dan 4 digit terakhir nomor HP disensor menjadi 'XXXX'.
+          </p>
+        </div>
+      `,
+      lv2: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 4 (Detail Rincian Penjualan Multi-Tabel):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Hubungkan 5 tabel fisik (NOTA, KASIR, CUSTOMER, ITEMNOTA, PRODUK) ke dalam <code style="color:#FFF;">vw_RincianTransaksiLengkap</code>. Tampilkan nomor nota, tanggal, nama kasir, nama customer, nama produk, banyak, harga jual, dan subtotal (<code style="color:var(--accent-cyan);">banyak * hargajual</code>).
+          </p>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 5 (Rekapitulasi Faktur Penjualan):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah View agregasi <code style="color:#FFF;">vw_RekapNotaPenjualan</code> per faktur belanja: nomor nota, tanggal, nama kasir, nama customer, ragam variasi item (<code style="color:var(--accent-cyan);">COUNT</code>), total kuantitas barang (<code style="color:var(--accent-cyan);">SUM</code>), dan total nominal belanja.
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 6 (Analitik Produktivitas Kasir):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Buatlah View <code style="color:#FFF;">vw_KinerjaKasir</code> untuk evaluasi kasir: kode kasir, nama kasir, frekuensi nota dilayani (<code style="color:var(--accent-cyan);">COUNT DISTINCT</code>), total omset penjualan, dan rata-rata nominal per nota (<code style="color:var(--accent-cyan);">AVG</code>).
+          </p>
+        </div>
+      `,
+      lv3: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 7 (Pembaruan Stok Barang via View):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            a) Buatlah View sederhana <code style="color:#FFF;">vw_UpdateStokGudang</code> (KodeProduk, NamaProduk, Stok).<br>
+            b) Eksekusi kueri UPDATE stok produk 'P001' menjadi 25 unit melalui View tersebut.<br>
+            c) Buktikan dengan kueri SELECT bahwa tabel fisik dasar PRODUK ikut bermutasi.
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 8 (Pendaftaran Member Baru Tanpa Field Point):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            a) Buatlah View <code style="color:#FFF;">vw_RegistrasiCustomer</code> (seluruh kolom identitas diri tanpa PointTerkumpul).<br>
+            b) Eksekusi INSERT data customer baru ('M0003', 'Siti Rahma', '1995-04-12', 'P', 'Yogyakarta', '081333445566') melalui View.<br>
+            c) Verifikasi pengisian otomatis default value <code style="color:var(--accent-cyan);">PointTerkumpul = 0</code> pada tabel fisik CUSTOMER.
+          </p>
+        </div>
+      `,
+      lv4: `
+        <div style="margin-bottom: 14px;">
+          <strong style="color:var(--accent-cyan);">Soal 9 (Validasi Batasan Harga WITH CHECK OPTION):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            a) Buatlah View <code style="color:#FFF;">vw_ProdukPremium</code> (harga &gt;= 5000) dengan klausul <code style="color:var(--accent-cyan);">WITH CHECK OPTION</code>.<br>
+            b) Uji INSERT produk baru berharga 9500 (berhasil).<br>
+            c) Uji UPDATE harga produk menjadi 3000 (gagal dengan <code style="color:var(--accent-red);">ERROR 1369</code>).
+          </p>
+        </div>
+        <div>
+          <strong style="color:var(--accent-cyan);">Soal 10 (Eksperimen Tingkat Lanjut: LOCAL vs CASCADED):</strong>
+          <p style="font-size: 13px; color: var(--text-body); margin-top: 4px;">
+            Bandingkan perilaku hierarki antara View Induk (alamat='Yogyakarta') dan View Anak (point &gt;= 20). Amati perbedaan hasil saat mengubah alamat customer menjadi 'Sleman' melalui View Anak berstatus LOCAL CHECK OPTION versus CASCADED CHECK OPTION.
+          </p>
+        </div>
+      `
+    };
+
+    window.switchTaskTab = function(lvKey) {
+      document.querySelectorAll('#taskTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.target) window.event.target.classList.add('active');
+      document.getElementById('taskContainer').innerHTML = taskContent[lvKey];
+    };
+
+    // Solutions Data in Slide 12
+    const solutions = {
+      1: {
+        title: "SOLUSI SQL: SOAL 1 (vw_KatalogProdukAktif)",
+        code: `CREATE OR REPLACE VIEW vw_KatalogProdukAktif AS
+SELECT 
+    kodeproduk,
+    UPPER(namaproduk) AS nama_produk_kapital,
+    harga,
+    stok,
+    CASE 
+        WHEN stok = 0 THEN 'Stok Habis'
+        WHEN stok < 10 THEN 'Stok Kritis'
+        ELSE 'Stok Aman'
+    END AS status_stok
+FROM produk;
+
+-- Kueri Pengujian:
+SELECT * FROM vw_KatalogProdukAktif ORDER BY nama_produk_kapital ASC;`,
+        analysis: "Kueri memanfaatkan fungsi bawaan UPPER() untuk standarisasi huruf kapital dan struktur kendali CASE-WHEN untuk mengevaluasi ambang batas unit stok. View ini berstatus read-only untuk kolom kalkulasi status_stok, namun kolom harga dan stok tabel dasar tetap dapat diakses."
+      },
+      2: {
+        title: "SOLUSI SQL: SOAL 2 (vw_ProfilKasirPublik)",
+        code: `CREATE OR REPLACE VIEW vw_ProfilKasirPublik AS
+SELECT 
+    kodekasir,
+    namakasir,
+    IF(CHAR_LENGTH(pass) = 6, 'Memenuhi Standar Keamanan', 'Tidak Aman') AS status_kredensial
+FROM kasir;
+
+-- Kueri Pengujian:
+SELECT * FROM vw_ProfilKasirPublik;`,
+        analysis: "Menerapkan prinsip Column Masking. Kolom kata sandi 'Pass' sengaja dihilangkan dari SELECT-list untuk keamanan data. Karakteristik panjang kata sandi diaudit menggunakan CHAR_LENGTH() yang dibungkus conditional IF() tanpa pernah mengekspos isi teks sandi ke publik."
+      },
+      4: {
+        title: "SOLUSI SQL: SOAL 4 (vw_RincianTransaksiLengkap)",
+        code: `CREATE OR REPLACE VIEW vw_RincianTransaksiLengkap AS
+SELECT 
+    n.nonota,
+    n.tgltran,
+    k.namakasir,
+    c.namacus,
+    p.namaproduk,
+    i.banyak,
+    i.hargajual,
+    (i.banyak * i.hargajual) AS subtotal
+FROM nota n
+INNER JOIN kasir k ON n.kodekasir = k.kodekasir
+INNER JOIN customer c ON n.kodecus = c.kodecus
+INNER JOIN itemnota i ON n.nonota = i.nonota
+INNER JOIN produk p ON i.kodeproduk = p.kodeproduk;
+
+-- Kueri Pengujian:
+SELECT * FROM vw_RincianTransaksiLengkap 
+WHERE tgltran BETWEEN '2022-08-01' AND '2022-08-03';`,
+        analysis: "Mengintegrasikan 5 tabel fisik ternormalisasi 3NF melalui INNER JOIN. Kueri mengabstraksikan foreign key relasi nota-itemnota-produk sehingga konsumen kueri cukup melihat entitas nama deskriptif disertai hasil kali kalkulasi subtotal penjualan."
+      },
+      5: {
+        title: "SOLUSI SQL: SOAL 5 (vw_RekapNotaPenjualan)",
+        code: `CREATE OR REPLACE VIEW vw_RekapNotaPenjualan AS
+SELECT 
+    n.nonota,
+    n.tgltran,
+    k.namakasir,
+    c.namacus,
+    COUNT(i.kodeproduk) AS ragam_item,
+    SUM(i.banyak) AS total_unit_barang,
+    SUM(i.banyak * i.hargajual) AS total_belanja_nota
+FROM nota n
+INNER JOIN kasir k ON n.kodekasir = k.kodekasir
+INNER JOIN customer c ON n.kodecus = c.kodecus
+INNER JOIN itemnota i ON n.nonota = i.nonota
+GROUP BY n.nonota, n.tgltran, k.namakasir, c.namacus;`,
+        analysis: "View ini menggunakan fungsi agregasi COUNT() untuk menghitung variasi produk unik per faktur dan fungsi SUM() untuk menghitung total kuantitas fisik dan nominal belanja. Kehadiran klausul GROUP BY dan fungsi agregat mengklasifikasikan View ini sebagai Complex View yang berstatus Non-Updatable."
+      },
+      6: {
+        title: "SOLUSI SQL: SOAL 6 (vw_KinerjaKasir)",
+        code: `CREATE OR REPLACE VIEW vw_KinerjaKasir AS
+SELECT 
+    k.kodekasir,
+    k.namakasir,
+    COUNT(DISTINCT n.nonota) AS frekuensi_transaksi,
+    IFNULL(SUM(i.banyak * i.hargajual), 0) AS total_omset_penjualan,
+    IFNULL(ROUND(AVG(t.total_nota), 2), 0) AS rata_rata_per_nota
+FROM kasir k
+LEFT JOIN nota n ON k.kodekasir = n.kodekasir
+LEFT JOIN itemnota i ON n.nonota = i.nonota
+LEFT JOIN (
+    SELECT nonota, SUM(banyak * hargajual) AS total_nota
+    FROM itemnota
+    GROUP BY nonota
+) t ON n.nonota = t.nonota
+GROUP BY k.kodekasir, k.namakasir;`,
+        analysis: "Menerapkan LEFT JOIN agar staf kasir yang belum mencatatkan transaksi tetap terdaftar dalam rekap. COUNT(DISTINCT n.nonota) mencegah distorsi penggandaan faktur akibat relasi 1-ke-banyak dengan tabel itemnota, dan IFNULL() menggantikan nilai kosong dengan 0."
+      },
+      7: {
+        title: "SOLUSI SQL: SOAL 7 (vw_UpdateStokGudang)",
+        code: `CREATE OR REPLACE VIEW vw_UpdateStokGudang AS
+SELECT kodeproduk, namaproduk, stok
+FROM produk;
+
+-- Kueri Pembaruan Data (DML):
+UPDATE vw_UpdateStokGudang
+SET stok = 25
+WHERE kodeproduk = 'P001';
+
+-- Verifikasi pada Tabel Fisik PRODUK:
+SELECT * FROM produk WHERE kodeproduk = 'P001';`,
+        analysis: "View ini memenuhi seluruh syarat Updatable View: satu tabel dasar, tanpa agregasi, tanpa DISTINCT, dan memetakan langsung ke kolom dasar. Perintah UPDATE berhasil dieksekusi dan diverifikasi nilainya bermutasi langsung pada media penyimpanan tabel fisik PRODUK."
+      },
+      9: {
+        title: "SOLUSI SQL: SOAL 9 (vw_ProdukPremium)",
+        code: `CREATE OR REPLACE VIEW vw_ProdukPremium AS
+SELECT kodeproduk, namaproduk, harga, stok
+FROM produk
+WHERE harga >= 5000
+WITH CHECK OPTION;
+
+-- Uji Coba 1: INSERT Harga 9500 (Memenuhi Syarat -> SUKSES)
+INSERT INTO vw_ProdukPremium VALUES ('P004', 'Susu Steril Premium', 9500, 10);
+
+-- Uji Coba 2: UPDATE Harga Menjadi 3000 (Melanggar Syarat -> DITOLAK)
+UPDATE vw_ProdukPremium SET harga = 3000 WHERE kodeproduk = 'P004';
+-- Hasil: ERROR 1369 (HY000): CHECK OPTION failed 'minimarket.vw_ProdukPremium'`,
+        analysis: "Uji coba 1 berhasil karena harga 9500 >= 5000. Uji coba 2 digagalkan oleh MySQL dengan kode kesalahan ERROR 1369 (HY000). Klausa WITH CHECK OPTION secara aktif menolak setiap modifikasi data yang menyebabkan baris bersangkutan melanggar filter WHERE, sehingga integritas himpunan data View tetap terjaga utuh."
+      },
+      10: {
+        title: "SOLUSI SQL: SOAL 10 (LOCAL vs CASCADED)",
+        code: `CREATE OR REPLACE VIEW vw_MemberYogya AS
+SELECT kodecus, namacus, almtcus, pointterkumpul
+FROM customer WHERE almtcus = 'Yogyakarta';
+
+-- Kasus LOCAL:
+CREATE OR REPLACE VIEW vw_MemberLoyalYogya_Local AS
+SELECT * FROM vw_MemberYogya WHERE pointterkumpul >= 20
+WITH LOCAL CHECK OPTION;
+
+-- Kasus CASCADED:
+CREATE OR REPLACE VIEW vw_MemberLoyalYogya_Cascaded AS
+SELECT * FROM vw_MemberYogya WHERE pointterkumpul >= 20
+WITH CASCADED CHECK OPTION;`,
+        analysis: "Eksperimen ini membuktikan perbedaan hakiki LOCAL vs CASCADED: Pada LOCAL CHECK OPTION, MySQL hanya menguji kondisi dirinya (pointterkumpul >= 20) dan mengabaikan view induk yang tidak ber-check option. Sedangkan pada CASCADED, MySQL mewajibkan kepatuhan terhadap seluruh rantai kondisi view di bawahnya secara rekursif."
+      }
+    };
+
+    window.loadSolution = function(num) {
+      document.querySelectorAll('#solutionTabBar .tab-btn').forEach(b => b.classList.remove('active'));
+      if (window.event && window.event.target) window.event.target.classList.add('active');
+
+      const sol = solutions[num];
+      document.getElementById('solutionTitle').textContent = sol.title;
+      document.getElementById('solCodeContent').textContent = sol.code;
+      document.getElementById('solAnalysis').innerHTML = sol.analysis;
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/procedure", "destination": "/slide_procedure_function.html" },
+    { "source": "/routine", "destination": "/slide_procedure_function.html" },
+    { "source": "/view", "destination": "/slide_view.html" },
+    { "source": "/sql", "destination": "/minimarket_db.sql" },
+    { "source": "/download/sql", "destination": "/minimarket_db.sql" }
+  ],
+  "headers": [
+    {
+      "source": "/minimarket_db.sql",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"minimarket_db.sql\"" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+      ]
+    }
+  ]
+}
