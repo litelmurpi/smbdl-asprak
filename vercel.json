@@ -3,9 +3,9 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/procedure", "destination": "/slide_procedure_function.html" },
-    { "source": "/routine", "destination": "/slide_procedure_function.html" },
-    { "source": "/view", "destination": "/slide_view.html" },
+    { "source": "/procedure", "destination": "/slide_procedure_function" },
+    { "source": "/routine", "destination": "/slide_procedure_function" },
+    { "source": "/view", "destination": "/slide_view" },
     { "source": "/sql", "destination": "/minimarket_db.sql" },
     { "source": "/download/sql", "destination": "/minimarket_db.sql" }
   ],
