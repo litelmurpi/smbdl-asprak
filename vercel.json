@@ -7,7 +7,9 @@
     { "source": "/routine", "destination": "/slide_procedure_function" },
     { "source": "/view", "destination": "/slide_view" },
     { "source": "/sql", "destination": "/minimarket_db.sql" },
-    { "source": "/download/sql", "destination": "/minimarket_db.sql" }
+    { "source": "/download/sql", "destination": "/minimarket_db.sql" },
+    { "source": "/pptx", "destination": "/Materi_Pengayaan_Stored_Procedure_UDF_Cursor.pptx" },
+    { "source": "/download/pptx", "destination": "/Materi_Pengayaan_Stored_Procedure_UDF_Cursor.pptx" }
   ],
   "headers": [
     {
@@ -15,6 +17,13 @@
       "headers": [
         { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
         { "key": "Content-Disposition", "value": "attachment; filename=\"minimarket_db.sql\"" }
+      ]
+    },
+    {
+      "source": "/Materi_Pengayaan_Stored_Procedure_UDF_Cursor.pptx",
+      "headers": [
+        { "key": "Content-Type", "value": "application/vnd.openxmlformats-officedocument.presentationml.presentation" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"Materi_Pengayaan_Stored_Procedure_UDF_Cursor.pptx\"" }
       ]
     },
     {
