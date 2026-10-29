@@ -510,6 +510,41 @@
       line-height: 1.55;
     }
 
+    /* Callout & Analogy Badges */
+    .callout-box {
+      background: rgba(0, 229, 255, 0.06);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 229, 255, 0.22);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12.5px;
+      line-height: 1.5;
+      color: var(--text-body);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    .callout-box.amber {
+      background: rgba(245, 158, 11, 0.07);
+      border-color: rgba(245, 158, 11, 0.25);
+      border-left-color: var(--accent-amber);
+    }
+    .callout-box.emerald {
+      background: rgba(16, 185, 129, 0.07);
+      border-color: rgba(16, 185, 129, 0.25);
+      border-left-color: var(--accent-green);
+    }
+    .callout-box.purple {
+      background: rgba(192, 132, 252, 0.07);
+      border-color: rgba(192, 132, 252, 0.25);
+      border-left-color: #C084FC;
+    }
+    .callout-box.red {
+      background: rgba(244, 63, 94, 0.07);
+      border-color: rgba(244, 63, 94, 0.25);
+      border-left-color: var(--accent-red);
+    }
+
     /* SMOKED LIQUID GLASS CODE BOX */
     .code-box {
       background: var(--surface-recessed);
@@ -1457,7 +1492,7 @@
               Pemrograman Prosedural Database: <span style="color: var(--accent-cyan);">Stored Procedure, UDF &amp; Cursor</span>
             </h1>
             <p class="hero-desc" style="font-size: 16px; color: var(--text-body); line-height: 1.6; margin-bottom: 26px;">
-              Penyusunan logika bisnis terpusat di sisi server (RDBMS): User Defined Function (UDF), Stored Procedure dengan parameter IN/OUT/INOUT, iterasi baris per baris dengan CURSOR, dan penanganan galat terstruktur (SIGNAL SQLSTATE &amp; HANDLER) pada kasus ritel minimarket 3NF.
+              Menjembatani konsep dasar SQL (DDL, DML, dan View) menuju penyusunan program logika bisnis terpusat di sisi server (RDBMS): User Defined Function (UDF), Stored Procedure parameter IN/OUT/INOUT, iterasi sekuensial CURSOR, dan transaksi atomik dengan SIGNAL &amp; HANDLER.
             </p>
 
             <div class="hero-badges-row" style="display: flex; gap: 12px; margin-bottom: 32px;">
@@ -1492,12 +1527,17 @@
         <!-- ==================== SLIDE 02: ARSITEKTUR CLIENT-SERVER ==================== -->
         <section class="slide" data-slide="2" data-cat="ARSITEKTUR ROUTINE">
           <div class="slide-label-row">
-            <span class="slide-category">01 · ARSITEKTUR RUTIN</span>
-            <span class="slide-submeta">Efisiensi Jaringan &amp; Kompilasi RDBMS</span>
+            <span class="slide-category">01 · JEMBATAN KONSEPTUAL &amp; ARSITEKTUR</span>
+            <span class="slide-submeta">Dari View Menuju Stored Routine</span>
           </div>
-          <h2 class="slide-title">Mengapa Memindahkan Logika ke Sisi Server?</h2>
-          <p class="slide-description">
-            Stored Routine memindahkan beban eksekusi logika bisnis dari aplikasi klien langsung ke memori database engine, memberikan 4 keuntungan fundamental:
+          <h2 class="slide-title">Evolusi Paradigma: Memindahkan Logika ke Database</h2>
+          
+          <div class="callout-box" style="margin-bottom: 12px; border-left-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08);">
+            <strong style="color: #FFF;"><i class="ph-bold ph-key"></i> Jembatan Konsep:</strong> Kalau <em>View</em> bertugas <strong>menyimpan query</strong> (tampilan data pasif dari 1 SELECT), maka <em>Stored Routine</em> bertugas <strong>menyimpan program</strong> (logika bisnis aktif: percabangan IF, loop perulangan, variabel sesi, serta mutasi multi-tabel serentak).
+          </div>
+
+          <p class="slide-description" style="margin-bottom: 12px;">
+            <strong style="color:#FFF;">Analogi Kasir Minimarket:</strong> Setiap transaksi harus: (1) cek stok &rarr; (2) potong stok &rarr; (3) catat nota &rarr; (4) tambah poin member. Menyatukan alur ini ke dalam Stored Routine memberikan 4 keunggulan arsitektural:
           </p>
 
           <div class="card-grid-4" style="flex: 1;">
@@ -1507,7 +1547,7 @@
                 <span class="tech-card-title">Reduksi Latensi</span>
               </div>
               <p class="tech-card-p">
-                Menggantikan belasan kueri SELECT dan UPDATE bolak-balik jaringan menjadi satu perintah <code style="color:var(--accent-cyan)">CALL</code>, memangkas *network latency* secara drastis.
+                Menggantikan belasan kueri SELECT dan UPDATE bolak-balik jaringan menjadi satu perintah <code style="color:var(--accent-cyan)">CALL</code>, memangkas <em>network latency</em> secara drastis.
               </p>
             </div>
             <div class="tech-card">
@@ -1516,7 +1556,7 @@
                 <span class="tech-card-title">Logika Terpusat</span>
               </div>
               <p class="tech-card-p">
-                Formula bisnis (diskon, aturan poin member, batas stok) didefinisikan satu kali di database; seluruh aplikasi kasir (desktop/web/mobile) menggunakan aturan seragam.
+                Formula bisnis (diskon, poin reward, batas stok) didefinisikan satu kali di database; seluruh aplikasi kasir (POS/web/mobile) menggunakan aturan seragam tanpa risiko *fraud*.
               </p>
             </div>
             <div class="tech-card">
@@ -1534,7 +1574,7 @@
                 <span class="tech-card-title">Isolasi Izin Akses</span>
               </div>
               <p class="tech-card-p">
-                Kasir cukup diberi izin <code style="color:var(--accent-cyan)">EXECUTE</code> pada procedure penjualan tanpa diberi izin langsung mengubah tabel master produk dan kasir.
+                Kasir cukup diberi izin <code style="color:var(--accent-cyan)">EXECUTE</code> pada procedure penjualan tanpa diberi izin langsung mengubah tabel master produk fisik dan kasir.
               </p>
             </div>
           </div>
@@ -1552,9 +1592,17 @@
             <span class="slide-submeta">Stored Function vs Stored Procedure</span>
           </div>
           <h2 class="slide-title">Perbedaan Hakiki: Function vs Procedure</h2>
-          <p class="slide-description">
-            Meskipun sama-sama blok kode terkompilasi, keduanya memiliki batasan arsitektural dan tujuan penggunaan yang sangat berbeda:
-          </p>
+
+          <div class="callout-box" style="margin-bottom: 12px; border-left-color: #38BDF8; background: rgba(56, 189, 248, 0.07); display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+              <strong style="color:var(--accent-cyan); display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-calculator"></i> Function (UDF) = Kalkulator:</strong>
+              Diberi input data, ia <em>wajib</em> mengembalikan tepat 1 nilai skalar (<code style="color:var(--accent-cyan)">RETURN</code>). Dipakai <em>di dalam</em> ekspresi kueri <code style="color:#FFF;">SELECT</code>.
+            </div>
+            <div>
+              <strong style="color:var(--accent-green); display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-robot"></i> Procedure = Robot / Mesin Pekerja:</strong>
+              Jalankan serangkaian tindakan atau alur kerja transaksi multi-tabel fisik. Dipanggil mandiri sebagai perintah terpisah dengan sintaks <code style="color:#FFF;">CALL</code>.
+            </div>
+          </div>
 
           <div class="table-sunken-frame">
             <table class="slide-table">
@@ -1569,7 +1617,7 @@
                 <tr>
                   <td><strong>Nilai Kembalian (Return)</strong></td>
                   <td><span style="color:var(--accent-cyan); font-weight:700;">Wajib 1 nilai skalar</span> via klausa <code style="color:var(--accent-cyan)">RETURNS</code> &amp; pernyataan <code style="color:var(--accent-cyan)">RETURN</code>.</td>
-                  <td>Tidak memiliki return langsung; mengembalikan nilai via parameter <code style="color:var(--accent-cyan)">OUT / INOUT</code> atau kueri result set.</td>
+                  <td>Tidak memiliki return langsung; mengembalikan nilai via parameter <code style="color:var(--accent-cyan)">OUT / INOUT</code> atau result set.</td>
                 </tr>
                 <tr>
                   <td><strong>Metode Pemanggilan</strong></td>
@@ -1578,12 +1626,12 @@
                 </tr>
                 <tr>
                   <td><strong>Manipulasi Fisik (DML)</strong></td>
-                  <td><span style="color:var(--accent-red); font-weight:600;">Sangat dibatasi</span>; dilarang mengubah state tabel (INSERT/UPDATE/DELETE) pada konteks kueri baca.</td>
-                  <td><span style="color:var(--accent-green); font-weight:600;">Bebas DML penuh</span>; dapat memutasi data, menjalankan transaksi (START TRANSACTION/COMMIT), dan dynamic SQL.</td>
+                  <td><span style="color:var(--accent-red); font-weight:600;">Sangat dibatasi</span>; dilarang mengubah state tabel (INSERT/UPDATE/DELETE) pada kueri baca.</td>
+                  <td><span style="color:var(--accent-green); font-weight:600;">Bebas DML penuh</span>; dapat memutasi data, mengontrol transaksi (START TRANSACTION/COMMIT/ROLLBACK), dan dynamic SQL.</td>
                 </tr>
                 <tr>
                   <td><strong>Fokus Penggunaan</strong></td>
-                  <td>Kalkulasi skalar, format teks, konversi mata uang, atau generator kode unik.</td>
+                  <td>Kalkulasi skalar, format teks (contoh: format rupiah), konversi nilai, atau generator kode unik.</td>
                   <td>Alur kerja transaksi multi-tabel, batch processing berkala, dan otomasi checkout kasir.</td>
                 </tr>
               </tbody>
@@ -1602,9 +1650,9 @@
             <span class="slide-category">03 · SINTAKS &amp; UDF</span>
             <span class="slide-submeta">DETERMINISTIC &amp; Skalar Computing</span>
           </div>
-          <h2 class="slide-title">User Defined Function (UDF) di MySQL</h2>
+          <h2 class="slide-title">User Defined Function (UDF) &amp; Misteri DELIMITER</h2>
           <p class="slide-description">
-            UDF memungkinkan pembuatan fungsi komputasi mandiri. Perhatikan deklarasi karakteristik penentu agar fungsi optimal:
+            UDF adalah kalkulator buatan sendiri yang dipanggil di dalam kueri <code style="color:var(--accent-cyan)">SELECT</code>. Pahami alasan penggantian delimiter dan label sifat fungsi:
           </p>
 
           <div class="card-grid-2" style="flex: 1;">
@@ -1633,29 +1681,37 @@
 <span class="kw">END</span>$$
 <span class="kw">DELIMITER</span> ;
 
-<span class="cm">-- Contoh Output: '2208030003'</span>
+<span class="cm">-- Contoh Pemanggilan di dalam SELECT:</span>
 <span class="kw">SELECT</span> fcGenerateNoNota(<span class="str">'2022-08-03'</span>) <span class="kw">AS</span> nota_baru;</div>
             </div>
 
-            <div class="tech-card">
-              <div class="tech-card-header">
-                <span class="tech-card-num">ATURAN</span>
-                <span class="tech-card-title">Karakteristik Penentu UDF</span>
+            <div class="tech-card" style="justify-content: space-between;">
+              <div>
+                <div class="callout-box amber" style="margin-top: 0; margin-bottom: 12px; font-size: 11.5px;">
+                  <strong style="color:var(--accent-amber); display:flex; align-items:center; gap:5px;"><i class="ph-bold ph-question"></i> Kenapa Wajib DELIMITER $$?</strong>
+                  Normalnya MySQL menganggap <code style="color:#FFF">;</code> sebagai penutup perintah. Di dalam <code style="color:#FFF">BEGIN...END</code> ada banyak <code style="color:#FFF">;</code>. Tanpa <code style="color:var(--accent-cyan)">DELIMITER $$</code>, query terputus di tengah jalan!
+                  <em>Analogi: tanda titik kalimat biasa di dalam paragraf vs penutup cerita ($$).</em>
+                </div>
+
+                <div class="tech-card-header" style="margin-bottom: 6px;">
+                  <span class="tech-card-num">LABEL</span>
+                  <span class="tech-card-title" style="font-size: 13.5px;">Karakteristik Sifat Fungsi</span>
+                </div>
+                <ul style="font-size: 11.5px; line-height: 1.5; padding-left: 16px; color: var(--text-body); margin: 0;">
+                  <li style="margin-bottom: 4px;">
+                    <strong style="color:var(--accent-cyan);">DETERMINISTIC:</strong> Input sama &rarr; output selalu sama persis. Wajib untuk replikasi &amp; binary logging aman.
+                  </li>
+                  <li style="margin-bottom: 4px;">
+                    <strong style="color:#FFF;">NOT DETERMINISTIC:</strong> Fungsi menghasilkan nilai berubah (misal membaca waktu <code style="color:var(--accent-cyan)">NOW()</code> atau isi tabel fisik).
+                  </li>
+                  <li style="margin-bottom: 4px;">
+                    <strong style="color:#FFF;">NO SQL:</strong> Murni rumus matematika/string tanpa kueri tabel fisik apa pun.
+                  </li>
+                  <li>
+                    <strong style="color:#FFF;">READS SQL DATA:</strong> Membaca data tabel via <code style="color:var(--accent-cyan)">SELECT</code> tanpa mengubah state data tabel.
+                  </li>
+                </ul>
               </div>
-              <ul style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
-                <li>
-                  <strong style="color:var(--accent-cyan);">DETERMINISTIC:</strong> Selalu mengembalikan output yang sama jika input argumennya sama. Wajib dideklarasikan pada server MySQL dengan binary logging aktif untuk replikasi yang aman.
-                </li>
-                <li>
-                  <strong style="color:#FFF;">NOT DETERMINISTIC:</strong> Fungsi dapat mengembalikan nilai berbeda pada pemanggilan berulang (contoh: membaca fungsi waktu <code style="color:var(--accent-cyan)">NOW()</code> atau tabel fisik).
-                </li>
-                <li>
-                  <strong style="color:#FFF;">READS SQL DATA:</strong> Menyatakan eksplisit bahwa fungsi membaca data tabel fisik (<code style="color:var(--accent-cyan)">SELECT</code>) tanpa memodifikasinya.
-                </li>
-                <li>
-                  <strong style="color:#FFF;">NO SQL:</strong> Murni komputasi matematika/string tanpa kueri SQL ke tabel fisik apa pun.
-                </li>
-              </ul>
             </div>
           </div>
 
@@ -1671,10 +1727,15 @@
             <span class="slide-category">04 · PARAMETER PROCEDURE</span>
             <span class="slide-submeta">Aliran Data: IN vs OUT vs INOUT</span>
           </div>
-          <h2 class="slide-title">Tiga Mode Parameter Stored Procedure</h2>
-          <p class="slide-description">
-            Stored Procedure tidak menggunakan klausa RETURN, melainkan mengontrol aliran data keluar-masuk melalui 3 tipe parameter:
-          </p>
+          <h2 class="slide-title">Tiga Mode Parameter: Analogi Mesin Fotokopi</h2>
+          
+          <div class="callout-box amber" style="margin-bottom: 12px;">
+            <strong style="color:var(--accent-amber); display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-printer"></i> Analogi Mesin Fotokopi:</strong>
+            <strong>IN</strong> = Dokumen asli masuk scanner (dibaca, aslinya tak berubah) · 
+            <strong>OUT</strong> = Lembaran fotokopi keluar (diisi procedure, diambil pemanggil) · 
+            <strong>INOUT</strong> = Formulir pendaftaran masuk dicoret/diedit nilainya, lalu dibawa pulang.
+            <span style="display:inline-block; margin-left:8px; color:var(--accent-cyan); font-family:var(--font-mono); font-size:11.5px;">(Gunakan tanda <code style="color:#FFF">@variabel</code> untuk menampung hasil OUT/INOUT)</span>
+          </div>
 
           <div class="card-grid-3" style="flex: 1;">
             <div class="tech-card">
@@ -1682,7 +1743,7 @@
                 <span class="tech-card-num">IN</span>
                 <span class="tech-card-title">Input Parameter</span>
               </div>
-              <p class="tech-card-p" style="margin-bottom: 10px;">
+              <p class="tech-card-p" style="margin-bottom: 10px; font-size: 12px;">
                 Mode bawaan (default). Nilai dikirim oleh pemanggil ke dalam procedure. Di dalam procedure nilainya bersifat *read-only* bagi pemanggil (modifikasi di dalam tidak merubah variabel luar).
               </p>
               <div class="code-box" style="height: 120px;">
@@ -1697,7 +1758,7 @@
                 <span class="tech-card-num">OUT</span>
                 <span class="tech-card-title">Output Parameter</span>
               </div>
-              <p class="tech-card-p" style="margin-bottom: 10px;">
+              <p class="tech-card-p" style="margin-bottom: 10px; font-size: 12px;">
                 Diinisialisasi sebagai NULL saat procedure dipanggil. Procedure mengisi nilainya dengan hasil proses, dan variabel pemanggil menerima nilai kembaliannya.
               </p>
               <div class="code-box" style="height: 120px;">
@@ -1713,7 +1774,7 @@
                 <span class="tech-card-num">INOUT</span>
                 <span class="tech-card-title">Dua Arah (Mutasi)</span>
               </div>
-              <p class="tech-card-p" style="margin-bottom: 10px;">
+              <p class="tech-card-p" style="margin-bottom: 10px; font-size: 12px;">
                 Membawa nilai awal dari pemanggil ke dalam procedure, dimodifikasi oleh logika procedure, dan nilai hasil akhirnya dikembalikan langsung ke pemanggil.
               </p>
               <div class="code-box" style="height: 120px;">
@@ -1739,9 +1800,11 @@
             <span class="slide-submeta">Percabangan &amp; Perulangan di Blok BEGIN-END</span>
           </div>
           <h2 class="slide-title">Struktur Kendali Prosedural di MySQL</h2>
-          <p class="slide-description">
-            Blok eksekusi <code style="color:var(--accent-cyan)">BEGIN ... END</code> mendukung kontrol alur komputasi lengkap untuk menerapkan aturan bisnis yang dinamis:
-          </p>
+
+          <div class="callout-box emerald" style="margin-bottom: 12px;">
+            <strong style="color:var(--accent-green); display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-code"></i> Logika Pemrograman di Database:</strong> 
+            Bagi Anda yang sudah memahami logika pemrograman (Python/Java/C++), struktur IF dan Looping di database ini konsepnya sama persis: percabangan kondisi, perulangan nilai, dan penanda henti, hanya saja dieksekusi langsung di memori RDBMS.
+          </div>
 
           <div class="card-grid-2" style="flex: 1;">
             <div class="tech-card">
@@ -1806,10 +1869,12 @@ my_loop: <span class="kw">LOOP</span>
             <span class="slide-category">06 · ITERASI ROW-BY-ROW</span>
             <span class="slide-submeta">Mekanisme Pengolahan Data Individual</span>
           </div>
-          <h2 class="slide-title">CURSOR: 4 Siklus Hidup Iterasi Data</h2>
-          <p class="slide-description">
-            Kueri SQL standar bekerja berbasis himpunan (*set-based*). CURSOR digunakan saat sistem harus mengevaluasi aturan individual untuk setiap baris data secara berurutan:
-          </p>
+          <h2 class="slide-title">CURSOR: Analogi Daftar Absensi &amp; 5 Siklus Hidup</h2>
+          
+          <div class="callout-box purple" style="margin-bottom: 12px;">
+            <strong style="color:#C084FC; display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-clipboard-text"></i> Analogi Membaca Lembar Absensi:</strong>
+            Normalnya SQL bekerja berbasis himpunan (<em>set-based</em>). Cursor ibarat dosen membaca absensi mahasiswa satu per satu: tunjuk nama pertama, baca datanya (<code style="color:#FFF">FETCH</code>), evaluasi aturan individual per baris, lalu lanjut ke bawah sampai habis (<code style="color:#FFF">v_selesai = 1</code>).
+          </div>
 
           <div class="card-grid-2" style="flex: 1;">
             <div class="code-box">
@@ -1822,7 +1887,7 @@ my_loop: <span class="kw">LOOP</span>
     <span class="kw">SELECT</span> kodecus, pointterkumpul 
     <span class="kw">FROM</span> <span class="tbl">customer</span> <span class="kw">WHERE</span> kodecus &lt;&gt; <span class="str">'M0000'</span>;
 
-<span class="kw">DECLARE CONTINUE HANDLER FOR NOT FOUND SET</span> v_done = 1;
+<span class="kw">DECLARE CONTINUE HANDLER FOR NOT FOUND SET</span> v_selesai = 1;
 
 <span class="cm">-- 2. Membuka Cursor</span>
 <span class="kw">OPEN</span> curCustomer;
@@ -1830,10 +1895,10 @@ my_loop: <span class="kw">LOOP</span>
 <span class="cm">-- 3. Loop Pengambilan Baris per Baris</span>
 bacaLoop: <span class="kw">LOOP</span>
     <span class="kw">FETCH</span> curCustomer <span class="kw">INTO</span> v_kode, v_poin;
-    <span class="kw">IF</span> v_done = 1 <span class="kw">THEN</span>
+    <span class="kw">IF</span> v_selesai = 1 <span class="kw">THEN</span>
         <span class="kw">LEAVE</span> bacaLoop;
     <span class="kw">END IF</span>;
-    <span class="cm">-- Logika update individual</span>
+    <span class="cm">-- Logika evaluasi individual per baris customer</span>
     <span class="kw">UPDATE</span> <span class="tbl">customer</span> <span class="kw">SET</span> pointterkumpul = pointterkumpul + 10 
     <span class="kw">WHERE</span> kodecus = v_kode;
 <span class="kw">END LOOP</span> bacaLoop;
@@ -1842,28 +1907,34 @@ bacaLoop: <span class="kw">LOOP</span>
 <span class="kw">CLOSE</span> curCustomer;</div>
             </div>
 
-            <div class="tech-card">
-              <div class="tech-card-header">
-                <span class="tech-card-num">SIKLUS</span>
-                <span class="tech-card-title">Tahapan Eksekusi Memori</span>
+            <div class="tech-card" style="justify-content: space-between;">
+              <div>
+                <div class="tech-card-header" style="margin-bottom: 6px;">
+                  <span class="tech-card-num">SIKLUS</span>
+                  <span class="tech-card-title">5 Tahap Eksekusi Memori</span>
+                </div>
+                <ol style="font-size: 11.5px; line-height: 1.5; padding-left: 16px; color: var(--text-body); margin: 0;">
+                  <li style="margin-bottom: 3px;">
+                    <strong style="color:var(--accent-cyan);">DECLARE CURSOR:</strong> Daftarkan kueri SELECT yang ditampung ke dalam pointer memori.
+                  </li>
+                  <li style="margin-bottom: 3px;">
+                    <strong style="color:#FFF;">DECLARE HANDLER:</strong> Pasang penanda selesai (<code style="color:var(--accent-cyan)">SET v_selesai = 1</code>) saat FETCH mencapai baris terakhir.
+                  </li>
+                  <li style="margin-bottom: 3px;">
+                    <strong style="color:#FFF;">OPEN:</strong> Mengalokasikan ruang memori buffer di server dan mengeksekusi kueri pembentuk cursor.
+                  </li>
+                  <li style="margin-bottom: 3px;">
+                    <strong style="color:#FFF;">FETCH di LOOP:</strong> Ambil 1 baris ke variabel lokal. Jika <code style="color:var(--accent-cyan)">v_selesai = 1</code>, panggil <code style="color:#FFF">LEAVE</code>.
+                  </li>
+                  <li>
+                    <strong style="color:#FFF;">CLOSE:</strong> Bebaskan alokasi memori server RDBMS seketika setelah iterasi tuntas.
+                  </li>
+                </ol>
               </div>
-              <ol style="font-size: 12px; line-height: 1.6; padding-left: 18px; color: var(--text-body);">
-                <li>
-                  <strong style="color:var(--accent-cyan);">DECLARE CURSOR:</strong> Mendaftarkan kueri SELECT yang akan ditampung ke dalam pointer memori.
-                </li>
-                <li>
-                  <strong style="color:#FFF;">DECLARE HANDLER:</strong> Mencegah fatal error saat iterasi mencapai baris terakhir dengan mengeset flag selesai (<code style="color:var(--accent-cyan)">v_done = 1</code>).
-                </li>
-                <li>
-                  <strong style="color:#FFF;">OPEN:</strong> Mengalokasikan ruang memori di server dan mengeksekusi kueri pembentuk cursor.
-                </li>
-                <li>
-                  <strong style="color:#FFF;">FETCH:</strong> Memindahkan penunjuk baris (*pointer*) maju 1 baris dan menyalin nilainya ke variabel lokal.
-                </li>
-                <li>
-                  <strong style="color:#FFF;">CLOSE:</strong> Membebaskan memori kerja server RDBMS setelah proses iterasi selesai.
-                </li>
-              </ol>
+
+              <div style="margin-top:10px; padding:8px 10px; background:rgba(245,158,11,0.08); border-left:3px solid var(--accent-amber); border-radius:6px; font-size:11px; color:#FED7AA; line-height:1.45;">
+                <strong>Catatan Kinerja (Performance Trade-off):</strong> Kursor lambat untuk data besar karena overhead per baris. Jika transformasi bisa diselesaikan dengan kueri set-based murni (<code style="color:#FFF">UPDATE ... CASE</code>), kueri set-based jauh lebih cepat dan disarankan!
+              </div>
             </div>
           </div>
 
@@ -1879,10 +1950,18 @@ bacaLoop: <span class="kw">LOOP</span>
             <span class="slide-category">07 · PENANGANAN GALAT</span>
             <span class="slide-submeta">Integritas Transaksi &amp; Validasi Kustom</span>
           </div>
-          <h2 class="slide-title">Penanganan Galat: HANDLER &amp; SIGNAL SQLSTATE</h2>
-          <p class="slide-description">
-            Aplikasi produksi wajib mencegah korupsi data transaksi melalui penanganan eksepsi terstruktur dan pelemparan pesan galat kustom:
-          </p>
+          <h2 class="slide-title">Penanganan Galat: Satpam Toko &amp; Mesin ATM</h2>
+
+          <div class="callout-box red" style="margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+              <strong style="color:var(--accent-red); display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-shield-warning"></i> SIGNAL 45000 = Satpam Toko:</strong>
+              Saat kuantitas beli melebihi stok fisik, satpam langsung menolak transaksi dengan alasan jelas (<code style="color:#FFF">'45000'</code> adalah kode standar user-defined exception).
+            </div>
+            <div>
+              <strong style="color:var(--accent-cyan); display:flex; align-items:center; gap:6px;"><i class="ph-bold ph-bank"></i> Transaksi ACID = Transfer ATM:</strong>
+              Uang ditarik dan disetor. Keduanya wajib sukses bersama (<code style="color:#FFF">COMMIT</code>). Jika listrik padam di tengah jalan, seluruh mutasi batal utuh (<code style="color:#FFF">ROLLBACK</code>). Tak boleh separuh jalan!
+            </div>
+          </div>
 
           <div class="card-grid-2" style="flex: 1;">
             <div class="code-box">
@@ -1910,21 +1989,28 @@ bacaLoop: <span class="kw">LOOP</span>
 <span class="kw">END</span>;</div>
             </div>
 
-            <div class="tech-card highlight">
-              <div class="tech-card-header">
-                <span class="tech-card-num" style="background:rgba(244,63,94,0.15); color:var(--accent-red);">RESPON</span>
-                <span class="tech-card-title">Mekanisme Proteksi Atomik</span>
+            <div class="tech-card highlight" style="justify-content: space-between;">
+              <div>
+                <div class="tech-card-header">
+                  <span class="tech-card-num" style="background:rgba(244,63,94,0.15); color:var(--accent-red);">RESPON</span>
+                  <span class="tech-card-title">Mekanisme Proteksi Atomik</span>
+                </div>
+                <p class="tech-card-p" style="margin-bottom: 8px; font-size: 12px;">
+                  Saat stok tidak mencukupi, perintah <code style="color:var(--accent-red)">SIGNAL SQLSTATE '45000'</code> membatalkan eksekusi dan mengembalikan pesan galat ramah pengguna:
+                </p>
+                <div class="error-box" style="font-size: 11px;">
+                  ERROR 1644 (45000): Transaksi Dibatalkan: Stok barang di toko tidak mencukupi!
+                </div>
               </div>
-              <p class="tech-card-p" style="margin-bottom: 10px;">
-                Saat stok tidak mencukupi, perintah <code style="color:var(--accent-red)">SIGNAL SQLSTATE '45000'</code> membatalkan eksekusi dan mengembalikan pesan galat ramah pengguna:
-              </p>
-              <div class="error-box">
-                ERROR 1644 (45000): Transaksi Dibatalkan: Stok barang di toko tidak mencukupi!
+
+              <div style="margin-top: 10px; padding: 10px 12px; background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 8px;">
+                <strong style="color:var(--accent-cyan); font-size: 12px; display: flex; align-items: center; gap: 5px;">
+                  <i class="ph-bold ph-shield-check"></i> DECLARE EXIT HANDLER FOR SQLEXCEPTION:
+                </strong>
+                <p style="font-size: 11.5px; color: var(--text-body); margin-top: 4px; line-height: 1.45;">
+                  Dipadukan dengan <code style="color:var(--accent-cyan)">ROLLBACK</code> untuk memastikan seluruh mutasi tabel (insert nota, potong stok, tambah poin) dibatalkan seketika jika terjadi kegagalan jaringan atau SQL error di tengah alur kerja.
+                </p>
               </div>
-              <p class="tech-card-p" style="margin-top: 12px; font-size: 12px;">
-                <strong style="color:#FFF;">DECLARE EXIT HANDLER FOR SQLEXCEPTION:</strong><br>
-                Dapat dipadukan dengan <code style="color:var(--accent-cyan)">ROLLBACK</code> untuk memastikan seluruh mutasi tabel dibatalkan seketika jika ada salah satu kueri yang gagal dieksekusi.
-              </p>
             </div>
           </div>
 
@@ -2084,9 +2170,11 @@ bacaLoop: <span class="kw">LOOP</span>
             <span class="slide-submeta">Integrasi Kasir, Customer, Nota, Item, &amp; Produk</span>
           </div>
           <h2 class="slide-title">Studi Kasus: Prosedur Checkout Kasir Otomatis</h2>
-          <p class="slide-description">
-            Mengintegrasikan seluruh materi (UDF generator nota, Stored Procedure, parameter OUT, mutasi stok, dan poin belanja):
-          </p>
+          
+          <div class="callout-box" style="margin-bottom: 12px; border-left-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08);">
+            <strong style="color: #FFF;"><i class="ph-bold ph-lightning"></i> Integrasi Seluruh Materi:</strong> 
+            Prosedur ini menyatukan <strong>UDF</strong> (<code style="color:var(--accent-cyan)">fcGenerateNoNota</code>), parameter <code style="color:var(--accent-cyan)">OUT</code>, validasi integritas dengan <code style="color:var(--accent-red)">SIGNAL 45000</code>, serta transaksi atomik (<code style="color:#FFF">START TRANSACTION ... COMMIT</code>) dengan proteksi otomatis <code style="color:var(--accent-cyan)">ROLLBACK</code> via <code style="color:#FFF">DECLARE EXIT HANDLER FOR SQLEXCEPTION</code>.
+          </div>
 
           <div class="code-box" style="flex: 1;">
             <div class="code-box-header">
@@ -2248,14 +2336,31 @@ DELIMITER ;
 SELECT kodeproduk, namaproduk, stok, fcCekStatusStok(kodeproduk) AS status_stok FROM produk;</div>
               </div>
 
-              <div class="tech-card action-card">
-                <div class="tech-card-header">
-                  <span class="tech-card-num">ANALISIS</span>
-                  <span class="tech-card-title">Penjelasan Logika &amp; Output</span>
+              <div class="tech-card action-card" style="justify-content: space-between;">
+                <div>
+                  <div class="tech-card-header" style="margin-bottom: 6px;">
+                    <span class="tech-card-num">ANALISIS</span>
+                    <span class="tech-card-title">Penjelasan Logika &amp; Output</span>
+                  </div>
+                  <p class="tech-card-p" id="solAnalysis" style="line-height: 1.6; margin-bottom: 10px;">
+                    Fungsi membaca data kolom stok dari tabel produk menggunakan klausa SELECT INTO dan mengevaluasi ambang batas unit menggunakan struktur kondisional IF-ELSEIF-ELSE.
+                  </p>
                 </div>
-                <p class="tech-card-p" id="solAnalysis" style="line-height: 1.6;">
-                  Fungsi membaca data kolom stok dari tabel produk menggunakan klausa SELECT INTO dan mengevaluasi ambang batas unit menggunakan struktur kondisional IF-ELSEIF-ELSE.
-                </p>
+
+                <div style="padding: 10px 12px; background: rgba(0, 229, 255, 0.06); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 8px;">
+                  <strong style="color:var(--accent-cyan); font-size: 11.5px; display:flex; align-items:center; gap:5px;">
+                    <i class="ph-bold ph-graduation-cap"></i> 7 Urutan Mengajar yang Disarankan (Pedagogy):
+                  </strong>
+                  <p style="font-size: 11px; color: var(--text-body); margin-top: 4px; line-height: 1.45;">
+                    1. Jembatan View &rarr; Routine (simpan query vs program)<br>
+                    2. UDF lebih dulu (mirip query SELECT)<br>
+                    3. Misteri DELIMITER $$ (titik kalimat vs penutup cerita)<br>
+                    4. Procedure &amp; parameter (analogi fotokopi &amp; @variabel)<br>
+                    5. Control Flow (IF &amp; Loop sama seperti Python/Java)<br>
+                    6. Cursor (analogi absensi: 5 langkah + flag v_selesai)<br>
+                    7. Error Handling &amp; Transaksi (satpam 45000 &amp; ATM)
+                  </p>
+                </div>
               </div>
             </div>
           </div>
