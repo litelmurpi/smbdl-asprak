@@ -45,7 +45,7 @@
 
 ---
 
-### SLIDE 02: EVOLUSI PARADIGMA & KASIR MINIMARKET
+### SLIDE 02: KENAPA LOGIKA BISNIS DI DATABASE? (SKENARIO KASIR)
 * **Tampilan Layar:** Jembatan Konsep Banner + 4 Kartu Benefit.
 * **Tindakan Fisik:** Berikan gestur tangan membandingkan kiri dan kanan saat menjelaskan View vs Routine.
 * **Pertanyaan Pancingan Interaktif:** Lontarkan pertanyaan ke baris depan.
@@ -68,14 +68,14 @@
 > *Bayangkan kalau langkah 1 sampai 4 ini ditulis sendiri-sendiri di aplikasi kasir desktop, ditulis ulang lagi di aplikasi mobile pembeli, ditulis ulang lagi di web admin. Begitu ada diskon baru atau rumus poin berubah, kalian harus ubah kodingan di 3 tempat berbeda! Rawan salah, dan rawan dicurangi.*  
 > 
 > *Dengan Stored Routine, seluruh urutan logika ini kita kunci di dalam database server. Manfaatnya ada empat:*  
-> *Pertama, **Reduksi Latensi**—aplikasi klien cukup kirim 1 perintah `CALL`, bukan bolak-balik kirim 15 query lewat WiFi.*  
-> *Kedua, **Logika Terpusat**—semua aplikasi patuh pada aturan yang sama persis.*  
-> *Ketiga, **Execution Cache**—database cuma mengompilasi kueri satu kali, setelah itu jalan super kencang dari RAM.*  
-> *Dan keempat, **Keamanan**—kasir cukup kita kasih izin menjalankan prosedur `CALL`, tanpa perlu kita kasih akses langsung otak-atik tabel produk."*
+> *Pertama, **Hemat Jaringan**—aplikasi kasir cukup kirim 1 perintah `CALL`, bukan bolak-balik kirim belasan query lewat jaringan.*  
+> *Kedua, **Aturan Terpusat**—semua aplikasi kasir atau web memakai aturan yang sama persis.*  
+> *Ketiga, **Eksekusi Cepat**—database mengompilasi subrutin sekali, setelah itu jalan langsung dari buffer memori.*  
+> *Dan keempat, **Akses Lebih Aman**—kasir cukup kita beri izin menjalankan `CALL`, tanpa diberi akses langsung mengubah tabel master produk."*
 
 ---
 
-### SLIDE 03: KOMPARASI HAKIKI (UDF VS STORED PROCEDURE)
+### SLIDE 03: PERBEDAAN UTAMA (UDF VS STORED PROCEDURE)
 * **Tampilan Layar:** Callout Kalkulator vs Robot + Tabel Komparasi.
 * **Tindakan Fisik:** Angkat satu jari saat menyebut angka 1 untuk UDF.
 
@@ -91,11 +91,11 @@
 > 🤖 **STORED PROCEDURE itu ibarat ROBOT PEKERJA.**  
 > *Kalian gak cuma minta hitung-hitungan, tapi kalian suruh dia: 'Tolong cek stok, kurangi barang, catat nota, kalau stok habis tolong batalkan!' Dia menjalankan serangkaian aksi nyata. Dia gak pakai `RETURN`, tapi dipanggil mandiri pakai perintah `CALL sp_nama()`.*  
 > 
-> *Aturan mutlaknya: Di dalam Function, kalian **dilarang keras** melakukan mutasi DML (INSERT/UPDATE/DELETE) yang merubah isi tabel. Kalau butuh mutasi tabel, wajib pakai Stored Procedure!"*
+> *Aturan pentingnya: Di dalam Function, kalian **tidak boleh** melakukan mutasi DML (INSERT/UPDATE/DELETE) yang merubah isi tabel. Kalau butuh mengubah isi tabel, gunakan Stored Procedure!"*
 
 ---
 
-### SLIDE 04: FUNCTION (UDF) & MISTERI DELIMITER
+### SLIDE 04: FUNCTION (UDF) & ALASAN BUTUH DELIMITER
 * **Tampilan Layar:** Code box `fcGenerateNoNota` di kiri + Penjelasan Delimiter di kanan.
 * **Tindakan Fisik:** Arahkan tangan ke kata `DELIMITER $$` di layar.
 
@@ -171,18 +171,18 @@
 > *Analogi gampangnya: **Dosen yang sedang membaca daftar absensi mahasiswa**.*  
 > *Dosen pegang lembaran daftar nama, tunjuk nama pertama, periksa kehadirannya, lanjut ke nama kedua, ketiga, sampai habis.*  
 > 
-> *Untuk membuat kursor, ada **5 langkah sakral** yang wajib kalian hafal urutannya:*  
+> *Untuk membuat kursor, ada **5 langkah berurutan** yang perlu kalian pahami:*  
 > *1. `DECLARE nama_kursor CURSOR FOR SELECT...` &rarr; Tentukan daftar data yang mau dibaca.*  
-> *2. `DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_selesai = 1;` &rarr; Pasang alarm/penanda kalau barisnya sudah habis.*  
+> *2. `DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_selesai = 1;` &rarr; Pasang penanda kalau barisnya sudah habis.*  
 > *3. `OPEN nama_kursor;` &rarr; Buka lembaran kursor di memori.*  
 > *4. `FETCH ... INTO ...` di dalam LOOP &rarr; Ambil satu baris, masukkan ke variabel, dan cek: kalau `v_selesai = 1`, segera `LEAVE`.*  
 > *5. `CLOSE nama_kursor;` &rarr; Tutup dan bersihkan memorinya dari server.*  
 > 
-> ⚠️ *Catatan kejujuran seorang engineer: Cursor itu berat dan lambat kalau datanya jutaan baris karena dia jalan satu per satu. Kalau masalah kalian bisa selesai pakai kueri biasa `UPDATE ... CASE`, dahulukan kueri biasa. Pakai kursor hanya kalau logikanya memang butuh iterasi individual."*
+> ⚠️ *Catatan praktis: Cursor butuh waktu dan memori lebih banyak karena berjalan per baris. Kalau masalah bisa selesai pakai kueri biasa `UPDATE ... CASE`, dahulukan kueri biasa. Pakai kursor hanya jika logikanya memang butuh iterasi individual."*
 
 ---
 
-### SLIDE 08: ERROR HANDLING & TRANSAKSI ACID
+### SLIDE 08: ERROR HANDLING & TRANSAKSI TETAP AMAN
 * **Tampilan Layar:** Dual Callout Satpam Toko & Mesin ATM + Blok Transaksi Rollback.
 * **Tindakan Fisik:** Gunakan nada suara yang lebih tegas untuk menunjukkan pentingnya integritas data.
 

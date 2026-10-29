@@ -287,7 +287,7 @@ def create_procedure_document():
         "(USER DEFINE FUNCTION & STORE PROCEDURE) pada mata kuliah Sistem Manajemen Basis Data Lanjut (SMBD Lanjut). "
         "Fokus utama modul ini adalah menjembatani pemahaman mahasiswa dari materi basis data dasar (DDL, DML, dan View) "
         "menuju paradigma pemrograman logika bisnis terkompilasi di sisi server (RDBMS). Modul dilengkapi penjelasan analogi dunia nyata, "
-        "analisis komparasi hakiki UDF vs Stored Procedure, manajemen parameter (IN, OUT, INOUT), struktur perulangan CURSOR baris per baris, "
+        "perbandingan perbedaan UDF vs Stored Procedure, manajemen parameter (IN, OUT, INOUT), struktur perulangan CURSOR baris per baris, "
         "penanganan eksepsi terstruktur (SIGNAL & HANDLER), studi kasus kasir 3NF, metodologi mengajar praktikum bagi asisten, "
         "serta 10 latihan soal bertingkat beserta kunci jawaban resmi."
     )
@@ -332,19 +332,19 @@ def create_procedure_document():
     # =========================================================================
     add_h1("2. ARSITEKTUR & EMPAT KEUNTUNGAN LOGIKA SISI SERVER")
     add_p(
-        "Dalam rekayasa sistem basis data relasional enterprise (seperti MySQL, MariaDB, Oracle, PostgreSQL), "
+        "Pada sistem basis data relasional (RDBMS) seperti MySQL, MariaDB, Oracle, atau PostgreSQL, "
         "Stored Routine adalah blok instruksi SQL terkompilasi yang disimpan secara permanen di dalam data dictionary (katalog sistem) "
         "dan dieksekusi langsung oleh server database engine. Memindahkan logika bisnis dari aplikasi klien langsung ke RDBMS memberikan 4 keunggulan:"
     )
 
     add_bullet(
         "Pada arsitektur konvensional, aplikasi klien harus mengirimkan belasan kueri SELECT dan UPDATE secara bolak-balik melalui jaringan kabel/WiFi. "
-        "Dengan Stored Routine, aplikasi cukup mengirimkan satu baris perintah CALL, dan seluruh rangkaian kueri dieksekusi langsung di RAM server, memangkas latensi jaringan secara signifikan.",
+        "Dengan Stored Routine, aplikasi cukup mengirimkan satu baris perintah CALL, dan seluruh rangkaian kueri dieksekusi langsung di RAM server, mengurangi latensi jaringan.",
         bold_prefix="1. Reduksi Lalu Lintas Jaringan (Network Traffic Optimization): "
     )
     add_bullet(
         "Aturan bisnis krusial (misal kalkulasi poin reward, diskon member, validasi batas minimum stok) didefinisikan satu kali secara terpusat di basis data. "
-        "Seluruh aplikasi klien memakai aturan yang sama persis, menjamin konsistensi mutlak.",
+        "Seluruh aplikasi klien memakai aturan yang sama persis, menjaga konsistensi data.",
         bold_prefix="2. Sentralisasi Logika Bisnis (Centralized Business Logic): "
     )
     add_bullet(
@@ -361,7 +361,7 @@ def create_procedure_document():
     # =========================================================================
     # 3. FUNCTION VS PROCEDURE
     # =========================================================================
-    add_h1("3. PERBEDAAN HAKIKI: FUNCTION (UDF) VS STORED PROCEDURE")
+    add_h1("3. PERBEDAAN UTAMA: FUNCTION (UDF) VS STORED PROCEDURE")
     add_p(
         "Meskipun sama-sama merupakan blok kode prosedural SQL terkompilasi di sisi server, User Defined Function (UDF) "
         "dan Stored Procedure memiliki batasan arsitektural dan tujuan perancangan yang sangat berbeda:"
@@ -754,7 +754,7 @@ CALL spKurangiStokBarang('P001', 9999);
     # =========================================================================
     add_h1("9. STUDI KASUS PENUTUP: PROSEDUR TRANSAKSI CHECKOUT KASIR TERPADU")
     add_p(
-        "Prosedur spCheckoutTransaksi di bawah ini berfungsi sebagai studi kasus terpadu tingkat enterprise. "
+        "Prosedur spCheckoutTransaksi di bawah ini berfungsi sebagai studi kasus terpadu transaksi minimarket. "
         "Prosedur ini menggabungkan seluruh konsep yang telah dipelajari sebelumnya ke dalam satu alur transaksi kasir nyata:\n"
         "• Memanggil UDF (fcGenerateNoNota dan fcHitungPoinBelanja)\n"
         "• Menggunakan parameter input (IN) dan parameter hasil keluaran (OUT)\n"
@@ -854,7 +854,7 @@ SELECT @nota AS 'Nomor Nota', @total AS 'Total Bayar (Rp)', @poin AS 'Poin Diper
     )
     add_bullet(
         "Jelaskan alasan penggantian tanda akhir perintah menjadi '$$' saat mendemonstrasikan pembuatan Function pertama, agar mahasiswa tidak bingung dengan Syntax Error.",
-        bold_prefix="Langkah 3: Tuntaskan Misteri DELIMITER: "
+        bold_prefix="Langkah 3: Alasan Penggunaan DELIMITER: "
     )
     add_bullet(
         "Gunakan analogi mesin fotokopi untuk membedakan aliran data parameter IN (dokumen asli), OUT (hasil fotokopi), dan INOUT (formulir yang dicoret-coret). Tekankan pentingnya tanda '@' untuk variabel sesi penampung.",
@@ -865,7 +865,7 @@ SELECT @nota AS 'Nomor Nota', @total AS 'Total Bayar (Rp)', @poin AS 'Poin Diper
         bold_prefix="Langkah 5: Struktur Kendali Logika (Control Flow): "
     )
     add_bullet(
-        "Gunakan analogi membaca daftar absensi mahasiswa. Wajibkan mahasiswa menghafal 5 urutan mutlak: DECLARE CURSOR -> DECLARE HANDLER NOT FOUND -> OPEN -> FETCH di LOOP -> CLOSE. Jelaskan fungsi variabel bendera v_selesai.",
+        "Gunakan analogi membaca daftar absensi mahasiswa. Arahkan mahasiswa memahami 5 tahapan berurutan: DECLARE CURSOR -> DECLARE HANDLER NOT FOUND -> OPEN -> FETCH di LOOP -> CLOSE. Jelaskan fungsi variabel bendera v_selesai.",
         bold_prefix="Langkah 6: Cursor & Iterasi Baris Demi Baris: "
     )
     add_bullet(

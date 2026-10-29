@@ -432,20 +432,20 @@ def create_presentation():
     # =========================================================================
     s2 = prs.slides.add_slide(blank_layout)
     apply_slide_chassis(s2)
-    add_header(s2, "01 · Arsitektur Rutin", "Mengapa Memindahkan Logika ke Sisi Server?", "Efisiensi Jaringan & Kompilasi RDBMS", "Efisiensi Jaringan & Kompilasi RDBMS")
+    add_header(s2, "01 · Konsepsi & Arsitektur", "Kenapa Menaruh Logika Bisnis di Database?", "Hemat Jaringan & Keamanan Data", "Keuntungan Stored Routine")
 
     tb_sub2 = s2.shapes.add_textbox(Inches(1.0), Inches(1.6), Inches(11.3), Inches(0.4))
     p_s2 = tb_sub2.text_frame.paragraphs[0]
-    p_s2.text = "Stored Routine memindahkan beban eksekusi logika bisnis dari aplikasi klien langsung ke memori database engine, memberikan 4 keuntungan fundamental:"
+    p_s2.text = "Memindahkan logika transaksi langsung ke dalam database engine memberikan 4 keuntungan praktis:"
     p_s2.font.name = FONT_BODY
     p_s2.font.size = Pt(11)
     p_s2.font.color.rgb = COLOR_TEXT_BODY
 
     cards_s2 = [
-        ("Reduksi Latensi", "Menggantikan belasan kueri SELECT dan UPDATE bolak-balik jaringan menjadi satu perintah CALL, memangkas network latency secara drastis.", "01"),
-        ("Logika Terpusat", "Formula bisnis (diskon, aturan poin member, batas stok) didefinisikan satu kali di database; seluruh aplikasi kasir menggunakan aturan seragam.", "02"),
-        ("Execution Cache", "Rencana eksekusi (*execution plan*) dikompilasi satu kali dan disimpan di memori buffer RDBMS. Eksekusi berikutnya berjalan instan tanpa parsing kueri ulang.", "03"),
-        ("Isolasi Izin Akses", "Kasir cukup diberi izin EXECUTE pada procedure penjualan tanpa diberi izin langsung mengubah tabel master produk dan kasir fisik.", "04"),
+        ("Hemat Jaringan", "Aplikasi kasir cukup kirim 1 perintah CALL, bukan bolak-balik kirim belasan kueri lewat jaringan WiFi/kabel.", "01"),
+        ("Aturan Terpusat", "Rumus diskon, batas stok, dan poin ditulis sekali di database. Seluruh aplikasi kasir memakai aturan yang sama.", "02"),
+        ("Eksekusi Cepat", "Rencana eksekusi (execution plan) disimpan di buffer memori database. Eksekusi berikutnya berjalan langsung tanpa parsing ulang.", "03"),
+        ("Akses Lebih Aman", "Kasir cukup diberi izin EXECUTE pada prosedur penjualan tanpa diberi izin mengubah tabel master fisik secara langsung.", "04"),
     ]
     card_w = Inches(2.68)
     card_h = Inches(4.3)
@@ -459,21 +459,21 @@ def create_presentation():
     # =========================================================================
     s3 = prs.slides.add_slide(blank_layout)
     apply_slide_chassis(s3)
-    add_header(s3, "02 · Komparasi Hakiki", "Perbedaan Hakiki: Function vs Procedure", "Batasan Arsitektural", "Stored Function vs Stored Procedure")
+    add_header(s3, "02 · Komparasi Logika", "Perbedaan Utama: Function vs Procedure", "Kriteria & Batasan", "Function vs Procedure")
 
     tb_sub3 = s3.shapes.add_textbox(Inches(1.0), Inches(1.6), Inches(11.3), Inches(0.4))
     p_s3 = tb_sub3.text_frame.paragraphs[0]
-    p_s3.text = "Meskipun sama-sama blok kode terkompilasi, keduanya memiliki batasan arsitektural dan tujuan penggunaan yang sangat berbeda:"
+    p_s3.text = "Meskipun sama-sama blok kode di sisi server, keduanya dirancang untuk tugas yang berbeda:"
     p_s3.font.name = FONT_BODY
     p_s3.font.size = Pt(11)
     p_s3.font.color.rgb = COLOR_TEXT_BODY
 
-    headers_s3 = ["Parameter Karakteristik", "User Defined Function (UDF)", "Stored Procedure"]
+    headers_s3 = ["Kriteria", "User Defined Function (UDF)", "Stored Procedure"]
     rows_s3 = [
-        ["Nilai Kembalian (Return)", "Wajib 1 nilai skalar via klausa RETURNS & RETURN.", "Tidak memiliki return langsung; lewat parameter OUT / INOUT / result set."],
-        ["Metode Pemanggilan", "Dipanggil di dalam ekspresi kueri SQL biasa (SELECT fc(), WHERE fc() > 0).", "Dipanggil secara mandiri sebagai perintah terpisah: CALL sp_name(argumen);."],
-        ["Manipulasi Fisik (DML)", "Sangat dibatasi; dilarang mengubah state tabel (INSERT/UPDATE/DELETE) pada kueri baca.", "Bebas DML penuh; dapat memutasi data, transaksi COMMIT/ROLLBACK, dan dynamic SQL."],
-        ["Fokus Penggunaan", "Kalkulasi skalar, format teks, konversi mata uang, atau generator kode unik.", "Alur kerja transaksi multi-tabel, batch processing berkala, dan otomasi checkout kasir."]
+        ["Nilai Kembalian", "Wajib 1 nilai skalar via klausa RETURNS & RETURN.", "Tidak ada return langsung; memakai parameter OUT / INOUT."],
+        ["Cara Panggil", "Dipanggil di dalam kueri SQL biasa (SELECT fc(), WHERE fc() > 0).", "Dipanggil terpisah sebagai perintah mandiri: CALL sp_name(argumen);."],
+        ["Ubah Data (DML)", "Dilarang mengubah isi tabel saat dipanggil kueri baca.", "Bebas mengubah data, mengontrol transaksi COMMIT/ROLLBACK, dan kueri dinamis."],
+        ["Kapan Dipakai", "Perhitungan skalar, format teks, konversi nilai, atau nomor urut nota.", "Alur transaksi multi-tabel, batch processing berkala, dan otomasi kasir."]
     ]
     add_table(s3, Inches(1.0), Inches(2.1), Inches(11.3), Inches(4.3), headers_s3, rows_s3, [Inches(2.7), Inches(4.3), Inches(4.3)])
     add_notes(s3, "Ingatkan aturan MySQL: Function tidak boleh melakukan INSERT/UPDATE/DELETE jika dipanggil dari SELECT.")
@@ -483,7 +483,7 @@ def create_presentation():
     # =========================================================================
     s4 = prs.slides.add_slide(blank_layout)
     apply_slide_chassis(s4)
-    add_header(s4, "03 · Function (UDF)", "Anatomi & Karakteristik User Defined Function", "Logika Skalar", "Fungsi Skalar Sisi Server")
+    add_header(s4, "03 · Function (UDF)", "User Defined Function & Karakteristik Sifat", "Nilai Kembalian Tunggal", "Fungsi Buatan Sendiri")
 
     udf_code = (
         "DELIMITER $$\n"
@@ -520,9 +520,9 @@ def create_presentation():
     add_header(s5, "04 · Parameter SP", "Mode Parameter Stored Procedure:", "IN, OUT & INOUT", "Mekanisme Pertukaran Nilai")
 
     params = [
-        ("IN (Input Param)", "Bersifat Pass-by-Value (read-only). Nilai dikirim oleh pemanggil ke dalam prosedur. Perubahan variabel lokal di dalam prosedur tidak mengubah nilai pemanggil.", "IN"),
-        ("OUT (Output Param)", "Bersifat Pass-by-Reference (write-only). Nilai awal diabaikan (NULL). Prosedur mengisi nilai, dan pemanggil dapat membacanya setelah prosedur selesai.", "OUT"),
-        ("INOUT (Dual Param)", "Bersifat Dua Arah (read-write). Pemanggil mengirimkan nilai awal, lalu prosedur memproses dan mengubah nilai tersebut kembali ke pemanggil.", "INOUT")
+        ("IN (Input Saja)", "Nilai dikirim oleh pemanggil ke dalam prosedur. Perubahan nilai di dalam prosedur tidak mengubah variabel di luar (read-only).", "IN"),
+        ("OUT (Keluaran Saja)", "Nilai awalnya kosong (NULL). Prosedur mengisi nilai hasil perhitungan, lalu dikembalikan ke variabel pemanggil.", "OUT"),
+        ("INOUT (Bolak-Balik)", "Membawa nilai awal dari luar, diproses atau dimodifikasi di dalam prosedur, lalu nilai barunya dikembalikan lagi.", "INOUT")
     ]
     for i, (p_title, p_desc, p_badge) in enumerate(params):
         add_card(s5, Inches(1.0 + i * 3.84), Inches(1.85), Inches(3.64), Inches(2.1), p_title, p_desc, num_tag=p_badge)
@@ -549,7 +549,7 @@ def create_presentation():
     # =========================================================================
     s6 = prs.slides.add_slide(blank_layout)
     apply_slide_chassis(s6)
-    add_header(s6, "05 · Control Flow", "Struktur Kontrol Alur Logika di MySQL", "Percabangan & Iterasi", "Algoritma Prosedural")
+    add_header(s6, "05 · Kontrol Alur", "Logika Alur: Percabangan & Perulangan", "IF, CASE, WHILE & LOOP", "Algoritma Prosedural")
 
     cf_code1 = (
         "-- 1. PERCABANGAN IF-ELSEIF-ELSE\n"
@@ -592,13 +592,13 @@ def create_presentation():
     # =========================================================================
     s7 = prs.slides.add_slide(blank_layout)
     apply_slide_chassis(s7)
-    add_header(s7, "06 · Cursor & Iterasi", "Pengolahan Baris Tunggal Menggunakan CURSOR", "Iterasi Sequential", "Pointer Baris demi Baris")
+    add_header(s7, "06 · Cursor & Iterasi", "Cursor: Memproses Data Baris demi Baris", "5 Langkah Siklus", "Pointer Baris demi Baris")
 
     cursor_steps = [
-        ("1. DECLARE", "Mendeklarasikan nama kursor dan kueri SELECT yang akan ditampung.", "01"),
-        ("2. OPEN", "Mengeksekusi kueri SELECT dan menginisialisasi pointer data ke baris awal.", "02"),
-        ("3. FETCH", "Mengambil nilai kolom baris aktif ke variabel lokal dan menggeser pointer.", "03"),
-        ("4. CLOSE", "Menutup kursor dan membebaskan alokasi memori buffer RDBMS.", "04"),
+        ("1. DECLARE", "Mendeklarasikan nama kursor dan kueri SELECT yang akan dibaca.", "01"),
+        ("2. OPEN", "Mengeksekusi kueri SELECT dan menyiapkan pointer data di memori.", "02"),
+        ("3. FETCH", "Mengambil nilai satu baris ke variabel lokal dan menggeser pointer.", "03"),
+        ("4. CLOSE", "Menutup kursor dan membebaskan alokasi memori buffer server.", "04"),
     ]
     for i, (cs_title, cs_desc, cs_num) in enumerate(cursor_steps):
         add_card(s7, Inches(1.0 + i * 2.88), Inches(1.85), Inches(2.68), Inches(1.8), cs_title, cs_desc, num_tag=cs_num)
@@ -624,7 +624,7 @@ def create_presentation():
     # =========================================================================
     s8 = prs.slides.add_slide(blank_layout)
     apply_slide_chassis(s8)
-    add_header(s8, "07 · Error Handling", "Penanganan Galat Terstruktur & Integritas Transaksi", "SIGNAL & HANDLER", "Manajemen Galat")
+    add_header(s8, "07 · Penanganan Error", "Error Handling: Menjaga Transaksi Tetap Aman", "SIGNAL & HANDLER", "Mencegah Data Selisih")
 
     err_code = (
         "DELIMITER $$\n"
